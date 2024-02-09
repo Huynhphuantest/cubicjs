@@ -1,0 +1,8 @@
+/**
+ * @abstract
+ */
+class Equation {
+	apply() {
+
+	}
+}
