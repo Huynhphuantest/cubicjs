@@ -7,7 +7,7 @@ export default class Material {
      * @param {object} params
      * @param {number} params.restitution
      */
-	constructor({restitution}) {
-
+	constructor({restitution = 0}) {
+          this.restitution = restitution;
 	}
 }

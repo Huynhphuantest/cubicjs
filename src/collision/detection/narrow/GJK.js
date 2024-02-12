@@ -2,12 +2,14 @@ import { Vector3 } from "../../../Cubic.js";
 // eslint-disable-next-line no-unused-vars
 import ConvexPolygon from "../../../shape/ConvexPolygon.js";
 // eslint-disable-next-line no-unused-vars
-import CollisionDetectionAlgorithm, { CollisionInfo } from "../CollisionDetectionAlgorithm.js";
+import CollisionDetectionAlgorithm from "./NarrowPhase.js";
+// eslint-disable-next-line no-unused-vars
+import CollisionInfo from "../../CollisionInfo.js";
 // eslint-disable-next-line no-unused-vars
 import { Body } from "../../../Cubic.js";
 
 /**
- * @typedef {import("../CollisionDetectionAlgorithm.js").CollisionResult} CollisionResult
+ * @typedef {import("./NarrowPhase.js").CollisionResult} CollisionResult
  */
 // Simplex Type ( Imma not use class nor array here)
 /**

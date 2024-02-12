@@ -1,9 +1,0 @@
-/**
- * @abstract
- */
-class Phase {
-	constructor() {
-
-	}
-    
-}

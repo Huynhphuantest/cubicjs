@@ -7,7 +7,7 @@ import ConvexPolygon from "../../shape/ConvexPolygon.js";
 // eslint-disable-next-line no-unused-vars
 import { Sphere } from "../../Cubic.js";
 // eslint-disable-next-line no-unused-vars
-import CollisionInfo from "../CollisionInfo.js";
+import { CollisionInfo } from "../detection/CollisionDetectionAlgorithm.js";
 
 class ImpulseResponse {
 	/**

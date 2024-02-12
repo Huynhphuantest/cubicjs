@@ -6,12 +6,12 @@ import { Body } from "./Body.js";
 import SAP from "../collision/detection/broad/SAP.js";
 import GJK from "../collision/detection/narrow/GJK.js";
 import SAT from "../collision/detection/narrow/SAT.js";
-import { CollisionInfo } from "../collision/detection/CollisionDetectionAlgorithm.js";
+import CollisionInfo from "../collision/CollisionInfo.js";
 import ConvexPolygon from "../shape/ConvexPolygon.js";
 import Impulse from "../collision/resolution/Impulse.js";
 
 /**
- * @typedef {import('../collision/detection/CollisionDetectionAlgorithm.js').CollisionResult} CollisionResult
+ * @typedef {import('../collision/detection/narrow/NarrowPhase.js').CollisionResult} CollisionResult
  */
 
 export default class World {
@@ -134,12 +134,12 @@ function sphereConvex(objA, objB, shapeA, shapeB) {
         const sphereToCorner = worldCorner.subed(objA.position);
         if(sphereToCorner.lengthSq() < R * R) {
             found = true;
-			//FIXME: Add depth and point
+			//FIXME: Add depth and points
 			const normal = sphereToCorner.normalized();
 			const info = new CollisionInfo({
 				normal,
 				depth: NaN,
-				point: new Vector3()
+				points: []
 			});
 			Impulse.resolve(objA, objB, info);
             return;
@@ -181,10 +181,11 @@ function sphereConvex(objA, objB, shapeA, shapeB) {
 
             if(pointInPolygon(faceVerts,worldNormal,objA.position)){ // Is the sphere center in the face polygon?
                 found = true;
+                //FIXME: Add depth and points
 				const info = new CollisionInfo({
 					normal: worldNormal.negated(),
 					depth:NaN,
-					point:new Vector3()
+					points: []
 				});
                 Impulse.resolve(objA, objB, info);
 
@@ -221,9 +222,10 @@ function sphereConvex(objA, objB, shapeA, shapeB) {
                     // AND if p is in between v1 and v2
                     if(dot > 0 && dot*dot<edge.lengthSq() && xi_to_p.lengthSq() < R*R){ // Collision if the edge-sphere distance is less than the radius
                         // Edge contact!
+                        //FIXME: Add depth and points
                         const info = new CollisionInfo({
                             normal: p.subed(objA.position).normalize(),
-                            point: new Vector3(),
+                            points: [],
                             depth: NaN
                         });
                         Impulse.resolve(objA, objB, info);
@@ -290,9 +292,10 @@ function sphereSphere(objA, objB, shapeA, shapeB) {
         (shapeA.radius + shapeB.radius)
 	);
 	if(distance < totalRadius) {
+        const normal = objA.position.clone().sub(objB.position).normalize();
         const info = new CollisionInfo({
-            point: objA.position.clone().sub(objB.position),
-            normal: objA.position.clone().sub(objB.position).normalize(),
+            points: [objA.position.clone().add(normal.muledScalar(shapeA.radius))],
+            normal,
             depth: distance - totalRadius
         });
 		Impulse.resolve(objA, objB, info);

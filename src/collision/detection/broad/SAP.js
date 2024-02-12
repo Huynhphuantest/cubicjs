@@ -1,4 +1,6 @@
+// eslint-disable-next-line no-unused-vars
 import { Body } from "../../../Cubic.js";
+// eslint-disable-next-line no-unused-vars
 import AABB from "../../AABB.js";
 import BroadPhase from "./BroadPhase.js";
 
@@ -28,7 +30,7 @@ class SAPAlgorithm extends BroadPhase {
 			return 0;
 		});
 		const pairs = [];
-
+	
 		// loop through all objects:
 		for(let i = 0; i < axisList.length; i++) {
 			// For each object, iterate over all the subsequent objects in the list
@@ -43,6 +45,8 @@ class SAPAlgorithm extends BroadPhase {
 				// and B to A's list of potential collisions.
 				// [every object's list of collision candidates is 
 				// cleared before the next frame]
+
+				//if(!a.worldInfo.AABB.overlaps(b.worldInfo.AABB)) break;
 				pairs.push({
 					a,
 					b

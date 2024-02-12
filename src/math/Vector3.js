@@ -382,4 +382,27 @@ export default class Vector3 {
 		this.y = y;
 		this.z = z;
 	}
+
+	/**
+	 * @param {Vector3} target 
+	 * @returns {boolean}
+	 */
+	equals(target) {
+		return (
+			this.x === target.x &&
+			this.y === target.y &&
+			this.z === target.z
+		);
+	}
+
+	/**
+	 * @returns {boolean}
+	 */
+	isZero() {
+		return (
+			this.x === 0 &&
+			this.y === 0 &&
+			this.z === 0
+		);
+	}
 }

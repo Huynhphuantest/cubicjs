@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { Vector3 } from "../Cubic.js";
 
 export default class AABB {

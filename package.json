@@ -1,6 +1,6 @@
 {
   "name": "cubicjs",
-  "version": "0.0.1",
+  "version": "0.1.2",
   "description": "A Javascript physics libary",
   "main": "./build/cubic.module.js",
   "type": "module",

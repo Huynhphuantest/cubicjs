@@ -6,6 +6,9 @@ import ConvexPolygon from "../../src/shape/ConvexPolygon.js";
 import Shape, { ShapeType } from "../../src/core/Shape.js";
 import { Body, Box } from "../../src/Cubic.js";
 
+
+const renderProfilerDOM = document.querySelector("#render");
+
 let renderer, camera, scene;
 export function init() {
     renderer = new THREE.WebGLRenderer({});
@@ -21,7 +24,8 @@ export function init() {
     scene.add(camera);
 
     const light = new THREE.DirectionalLight(0xffffff, 2);
-    light.position.set(1,1,1);
+    light.position.set(-1,1,-1);
+    light.castShadow = true;
     scene.add(light);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
@@ -41,50 +45,73 @@ export function init() {
     };
 }
 function animate() {
+    
     requestAnimationFrame( animate );
+    
     for(const mesh of scene.children) { 
         if(mesh.collider) {
             mesh.position.copy(mesh.collider.position);
             mesh.quaternion.copy(mesh.collider.quaternion);
         }
     }
+    
+    const renderStartTime = performance.now();
+
     renderer.render( scene, camera );
+
+    if(renderProfilerDOM !== null)
+        renderProfilerDOM.innerHTML = `RenderTime: ${performance.now() - renderStartTime}ms`;
 }
 const objectMaterial = new THREE.MeshPhongMaterial({color: "gray"});
 /**
  * @param {Body | Shape} obj
+ * @param {boolean} [randomColor]
  */
-function add(obj) {
+function add(obj, randomColor = false) {
     if(obj instanceof Shape) 
-        addShape(obj);
+        addShape(obj, randomColor);
     else if(obj instanceof Body)
-        addBody(obj);
+        addBody(obj, randomColor);
 }
 /**
  * @param {Shape} shape 
+ * @param {boolean} randomColor
  * @returns {THREE.Mesh}
  */
-function addShape(shape) {
+function addShape(shape, randomColor) {
+    let mesh;
     switch(shape.type) {
         case ShapeType.Box:
             //@ts-ignore
-            return addBox(shape);
+            mesh = addBox(shape);
+            break;
         case ShapeType.Sphere:
-            return addSphere(shape);
+            mesh = addSphere(shape);
+            break;
     }
-    throw new TypeError("Not valid shape"); 
+    if(!mesh)
+        throw new TypeError("Not valid shape"); 
+    if(randomColor) {
+        mesh.material = new THREE.MeshPhongMaterial({color: new THREE.Color(
+            Math.random(),
+            Math.random(),
+            Math.random()
+        )});
+    }
+    return mesh;
 }
 /**
  * @param {Body} body 
+ * @param {boolean} randomColor
  */
-function addBody(body) {
+function addBody(body, randomColor) {
     const mesh = new THREE.Group();    
     //@ts-ignore
     mesh.collider = body;
     //@ts-ignore
     body.mesh = mesh;
     body.shapes.forEach(e => {
-        mesh.add(addShape(e));
+        mesh.add(addShape(e, randomColor));
     });
     scene.add(mesh);
 }
@@ -101,6 +128,8 @@ function addBox(box) {
         ),
         objectMaterial
     );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     scene.add(mesh);
     return mesh;
 }
@@ -111,6 +140,8 @@ function addSphere(sphere) {
         ),
         objectMaterial
     );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     scene.add(mesh);
     return mesh;
 }

@@ -244,7 +244,8 @@ export default class Quaternion {
 		this.y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
 		this.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
 		this.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
-
+		this.normalize();
+		
 		return this;
 
 	}

@@ -1,5 +1,7 @@
-import { Vector3, World, Quaternion } from "../Cubic.js";
+// eslint-disable-next-line no-unused-vars
+import { Vector3, World, Quaternion, Material, ConvexPolygon, Sphere } from "../Cubic.js";
 import AABB from "../collision/AABB.js";
+// eslint-disable-next-line no-unused-vars
 import Shape from "./Shape.js";
 
 /**
@@ -18,16 +20,19 @@ export class Body {
      * @param {object} params
      * @param {Shape[] | Shape} [params.shapes]
      * @param {number} [params.mass]
+	 * @param {Material} [params.material]
      */
 	constructor({
 		shapes = [],
-		mass = 1
+		mass = 1,
+		material = new Material({restitution: 0.1})
 	}) {
 		this.shapes = shapes instanceof Array ? shapes : [shapes];
 		this.type = BodyType.DYNAMIC;
 		this.mass = mass;
 		this.invMass = this.mass === 0 ? 0 : 1 / this.mass;
 		this.name = "UnamedObject";
+		this.material = material;
 
 		this.position = new Vector3();
 		this.velocity = new Vector3();
@@ -55,11 +60,8 @@ export class Body {
 		};
 		/**@description Previous info of this body, this should not be changed manually */
 		this.previousInfo = {
-			position: {
-				x: this.position.x,
-				y: this.position.x,
-				z: this.position.x
-			},
+			position: this.position.clone(),
+			quaternion: this.quaternion.clone(),
 			mass
 		};
 	}
@@ -69,28 +71,63 @@ export class Body {
      */
 	update(world, deltaTime) {
 		// VELOCITY
-		if(this.mass !== 0)
+		if(this.mass !== 0) {
 			this.position.add(this.velocity.clone().mulScalar(deltaTime));
+			if(!this.angularVelocity.isZero()) {
+				const newQuat = new Quaternion().setFromAxisAngle(this.angularVelocity, this.angularVelocity.length()*deltaTime);
+				this.quaternion.mulQuaternion(newQuat);
+			}
+		}
 
-		if(
-			this.position.x != this.previousInfo.position.x ||
-            this.position.y != this.previousInfo.position.y ||
-            this.position.z != this.previousInfo.position.z
-		) {
-			this.previousInfo.position.x = this.position.x,
-			this.previousInfo.position.y = this.position.y,
-			this.previousInfo.position.z = this.position.z;
-			this.updateWorldInfo();
+
+		if(!this.position.equals(this.previousInfo.position) ) {
+			this.updateWorldPositionAABB();
+			this.previousInfo.position.copy(this.position);
+		}
+		if(!this.quaternion.equals(this.previousInfo.quaternion )) {
+			this.updateWorldRotationAABB();
+			this.previousInfo.quaternion.copy(this.quaternion);
 		}
 		if(this.mass != this.previousInfo.mass) {
 			this.previousInfo.mass = this.mass;
 			this.invMass = this.mass == 0 ? 0 : 1 / this.mass;
 		}
 	}
-	updateWorldInfo() {
+	updateWorldPositionAABB() {
 		this.worldInfo.AABB = new AABB(
-			this.AABB.lowerBound.clone().add(this.position),
-			this.AABB.upperBound.clone().add(this.position)
+			this.AABB.lowerBound.added(this.position),
+			this.AABB.upperBound.added(this.position)
+		);
+	}
+	updateWorldRotationAABB() {
+		const lowerBound = new Vector3(Infinity, Infinity, Infinity);
+		const upperBound = new Vector3(-Infinity, -Infinity, -Infinity);
+		for(const shape of this.shapes) {
+			if(shape instanceof ConvexPolygon) {
+				for(const localVertex of shape.vertices) {
+					const vertex = localVertex.clone().applyQuaternion(this.quaternion);
+					if(vertex.x < lowerBound.x) lowerBound.x = vertex.x;
+					if(vertex.y < lowerBound.y) lowerBound.y = vertex.y;
+					if(vertex.z < lowerBound.z) lowerBound.z = vertex.z;
+
+					if(vertex.x > upperBound.x) upperBound.x = vertex.x;
+					if(vertex.y > upperBound.y) upperBound.y = vertex.y;
+					if(vertex.z > upperBound.z) upperBound.z = vertex.z;
+				}
+			}
+			if(shape instanceof Sphere) {
+				if(-shape.radius < lowerBound.x) lowerBound.x = -shape.radius;
+				if(-shape.radius < lowerBound.y) lowerBound.y = -shape.radius;
+				if(-shape.radius < lowerBound.z) lowerBound.z = -shape.radius;
+
+				if(shape.radius > upperBound.x) upperBound.x = shape.radius;
+				if(shape.radius > upperBound.y) upperBound.y = shape.radius;
+				if(shape.radius > upperBound.z) upperBound.z = shape.radius;
+			}
+		}
+		this.worldInfo.AABB = new AABB(
+			lowerBound.added(this.position),
+			upperBound.added(this.position)
 		);
 	}
 	updateAABB() {
