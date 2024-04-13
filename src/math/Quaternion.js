@@ -1,9 +1,9 @@
 // eslint-disable-next-line no-unused-vars
-import Vector3 from "./Vector3.js";
+import { Vector3 } from "./Vector3.js";
 import * as EMath from "./ExtendedMath.js";
 
 // ThreeJS Quaternion :P
-export default class Quaternion {
+export class Quaternion {
 
 	/**
    * 

@@ -5,7 +5,7 @@
   "main": "./build/cubic.module.js",
   "type": "module",
   "scripts": {
-    "test": "node test/$NAME"
+    "build": "rollup -c build/rollup.config.mjs"
   },
   "repository": {
     "type": "git",
@@ -23,11 +23,16 @@
   },
   "homepage": "https://github.com/huynhphuantest/Cubicjs#readme",
   "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.56.0",
+    "rollup": "^4.14.1",
     "three": "^0.160.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.12"
+  },
+  "dependencies": {
+    "ts-migrate": "^0.1.35"
   }
 }

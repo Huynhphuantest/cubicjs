@@ -1,14 +1,15 @@
-import ConvexPolygon from "./ConvexPolygon.js";
+import { ConvexPolygon } from "./ConvexPolygon.js";
 import { Vector3 } from "../Cubic.js";
 import { ShapeType } from "../core/Shape.js";
-import Face from "../math/Face.js";
+import { Face } from "../math/Face.js";
+import { AABB } from "../Cubic.js";
 
 /**
  * @private
  * @typedef boxShape
  * @property {Vector3[]} vertices
  * @property {Face[]} faces
- * @property {Vector3[]} aces
+ * @property {Vector3[]} axes
  */
 /**
  * @private
@@ -20,14 +21,14 @@ import Face from "../math/Face.js";
 function buildShape(w, h, d) {
 	/**@type {Vector3[]} */
 	const vertices = [
-		new Vector3(-w, -h, -d),
-		new Vector3( w, -h, -d),
-		new Vector3( w,  h, -d),
-		new Vector3(-w,  h, -d),
-		new Vector3(-w, -h,  d),
-		new Vector3( w, -h,  d),
-		new Vector3( w,  h,  d),
-		new Vector3(-w,  h,  d)
+		new Vector3(-w, -h, -d), // 0
+		new Vector3( w, -h, -d), // 1
+		new Vector3( w,  h, -d), // 2
+		new Vector3(-w,  h, -d), // 3
+		new Vector3(-w, -h,  d), // 4
+		new Vector3( w, -h,  d), // 5
+		new Vector3( w,  h,  d), // 6
+		new Vector3(-w,  h,  d)  // 7
 	];
 
 	/**@type {Face[]} */
@@ -41,7 +42,7 @@ function buildShape(w, h, d) {
 	];
 
 	/**@type {Vector3[]} */
-	const aces = [
+	const axes = [
 		new Vector3(0, 0, 1),
 		new Vector3(0, 1, 0),
 		new Vector3(1, 0, 0)
@@ -50,9 +51,10 @@ function buildShape(w, h, d) {
 	return {
 		vertices,
 		faces,
-		aces,
+		axes,
 	};
 }
+
 export default class Box extends ConvexPolygon {
 	/**
      * @constructor
@@ -84,7 +86,7 @@ export default class Box extends ConvexPolygon {
 		const {
 			vertices,
 			faces,
-			aces,
+			axes,
 		} = buildShape(
 			w/2,
 			h/2,
@@ -94,7 +96,7 @@ export default class Box extends ConvexPolygon {
 			type: ShapeType.Box,
 			vertices,
 			faces,
-			aces
+			axes
 		});
         
 		this.parameters = {
@@ -102,12 +104,43 @@ export default class Box extends ConvexPolygon {
 			height:h,
 			depth:d
 		};
+		
+		this.updateBoundingSphereRadius();
+		this.updateAABB();
 	}
 	updateBoundingSphereRadius() {
 		this.boundingSphereRadius = Math.sqrt(
 			this.parameters.width  * this.parameters.width +
             this.parameters.height * this.parameters.height +
             this.parameters.depth  * this.parameters.depth
+		);
+	}
+	updateAABB() {
+		this.AABB = new AABB(
+			new Vector3(
+				-this.parameters.width/2,
+				-this.parameters.height/2,
+				-this.parameters.depth/2
+			),
+			new Vector3(
+				this.parameters.width/2,
+				this.parameters.height/2,
+				this.parameters.depth/2
+			)
+		);
+	}
+	/**
+	 * @param {number} mass
+	 * @returns {Vector3}
+	 */
+	calculateInertia(mass) {
+		const x = this.parameters.width;
+		const y = this.parameters.height;
+		const z = this.parameters.depth;
+		return new Vector3(
+			1.0 / (12.0 * mass * (   2*x*2*y + 2*z*2*z )),
+			1.0 / (12.0 * mass * (   2*x*2*x + 2*z*2*z )),
+			1.0 / (12.0 * mass * (   2*y*2*y + 2*x*2*x ))
 		);
 	}
 }

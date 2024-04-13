@@ -1,5 +1,5 @@
-import Vector3 from "./Vector3.js";
-export default class Face {
+import { Vector3 } from "./Vector3.js";
+export class Face {
 	/**
 	 * @param {Vector3[]} vertices 
 	 * @param {Vector3} [normal]

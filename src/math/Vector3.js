@@ -1,13 +1,7 @@
 // eslint-disable-next-line no-unused-vars
-import Vector from "./Vector.js";
-// eslint-disable-next-line no-unused-vars
-import Quaternion from "./Quaternion.js";
+import { Quaternion } from "./Quaternion.js";
 
-/**
- * 3 Dimensional Vector
- * @implements Vector
- */
-export default class Vector3 {
+export class Vector3 {
 	/**
      * @constructor
      * @param {number} [x]
@@ -17,8 +11,6 @@ export default class Vector3 {
 	constructor(x, y, z) {
 		/**@readonly */
 		this.isVector = true;
-		/**@readonly */
-		this.dimension = 3;
 		this.x = x ?? 0;
 		this.y = y ?? 0;
 		this.z = z ?? 0;
@@ -257,6 +249,18 @@ export default class Vector3 {
 		this.y /= x;
 		this.z /= x;
 		return this;
+	}
+	/**
+	 * @param {Vector3} target 
+	 * @param {number} t
+	 * @returns 
+	 */
+	lerp(target, t) {
+		const x = this.x + (target.x - this.x) * t;
+		const y = this.y + (target.y - this.y) * t;
+		const z = this.z + (target.z - this.z) * t;
+
+		return new Vector3(x, y, z);
 	}
 	/**@param {Vector3} target */
 	dot(target) {

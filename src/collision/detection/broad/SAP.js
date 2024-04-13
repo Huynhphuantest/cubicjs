@@ -1,19 +1,19 @@
 // eslint-disable-next-line no-unused-vars
 import { Body } from "../../../Cubic.js";
 // eslint-disable-next-line no-unused-vars
-import AABB from "../../AABB.js";
-import BroadPhase from "./BroadPhase.js";
-
+import { AABB } from "../../AABB.js";
 
 /**
- * @typedef Checkable
- * @property {AABB} AABB
+ * @typedef {import('./BroadPhase.js').BroadPhase} BroadPhase
  */
 /**
  * @typedef {import('./BroadPhase.js').PotentialCollisionPair} PotentialCollisionPair
  */
 
-class SAPAlgorithm extends BroadPhase {
+/**
+ * @type {BroadPhase}
+ */
+export const SAP = {
 	/**
      * @param {Body[]} objects
      * @returns {PotentialCollisionPair[]}
@@ -46,7 +46,7 @@ class SAPAlgorithm extends BroadPhase {
 				// [every object's list of collision candidates is 
 				// cleared before the next frame]
 
-				//if(!a.worldInfo.AABB.overlaps(b.worldInfo.AABB)) break;
+				//if(!a.worldInfo.AABB.overlaps(b.worldInfo.AABB)) continue;
 				pairs.push({
 					a,
 					b
@@ -55,7 +55,4 @@ class SAPAlgorithm extends BroadPhase {
 		}
 		return pairs;
 	}
-}
-
-const SAP = new SAPAlgorithm();
-export default SAP;
+};

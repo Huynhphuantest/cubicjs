@@ -1,20 +1,21 @@
 import { Sphere, Vector3 } from "../Cubic.js";
 /* eslint-disable-next-line no-unused-vars */
-import Face from "../math/Face.js";
+import { Face } from "../math/Face.js";
 // eslint-disable-next-line no-unused-vars
 import { Body } from "./Body.js";
-import SAP from "../collision/detection/broad/SAP.js";
-import GJK from "../collision/detection/narrow/GJK.js";
-import SAT from "../collision/detection/narrow/SAT.js";
-import CollisionInfo from "../collision/CollisionInfo.js";
-import ConvexPolygon from "../shape/ConvexPolygon.js";
-import Impulse from "../collision/resolution/Impulse.js";
+import { SAP } from "../collision/detection/broad/SAP.js";
+//import GJK from "../collision/detection/narrow/GJK.js";
+import { SAT } from "../collision/detection/narrow/SAT.js";
+import { CollisionInfo } from "../collision/CollisionInfo.js";
+import { ConvexPolygon } from "../shape/ConvexPolygon.js";
+import { Impulse } from "../collision/resolution/Impulse.js";
+import { projectedPointInPolygon } from "../collision/detection/point.js";
 
 /**
  * @typedef {import('../collision/detection/narrow/NarrowPhase.js').CollisionResult} CollisionResult
  */
 
-export default class World {
+export class World {
 	/**
      * @constructor
      * @param {object} config
@@ -52,6 +53,8 @@ export default class World {
 		//   NARROW PHASE
 		for(const pair of pairs) {
 			//Use SAP again too get potential collision in each Body
+
+            //if(!pair.a.worldInfo.AABB.overlaps(pair.b.worldInfo.AABB)) return;
 			bodyBody(pair.a, pair.b );
 		}
 
@@ -71,6 +74,7 @@ export default class World {
  * @param {Body} objB 
  */
 function bodyBody(objA, objB) {
+    if(objA.mass === 0 && objB.mass === 0) return;
 	for(const shapeA of objA.shapes) {
 		for(const shapeB of objB.shapes) {
 			// CONVEX x CONVEX
@@ -110,171 +114,146 @@ function bodyBody(objA, objB) {
 		}
 	}
 }
+
 /**
- * @param {Body} objA 
- * @param {Body} objB 
- * @param {Sphere} shapeA 
- * @param {ConvexPolygon} shapeB
- * @author {Schteppe - CannonJS} - i stealed it from here (it is a pain to convert his code to mine)
- */
+* 
+* @param {Body} objA 
+* @param {Body} objB 
+* @param {Sphere} shapeA 
+* @param {ConvexPolygon} shapeB 
+* @returns
+*/
 function sphereConvex(objA, objB, shapeA, shapeB) {
-	//SAT
-    const faces = shapeB.faces;
-    const verts = shapeB.vertices;
-    const R =     shapeA.radius;
-	let found = false;
-
-    // Check corners
-    for(let i = 0; i < verts.length; i++){
-        const v = verts[i];
-
-        // World position of corner
-        const worldCorner = v.clone().applyQuaternion(objB.quaternion);
-        worldCorner.add(objB.position);
-        const sphereToCorner = worldCorner.subed(objA.position);
-        if(sphereToCorner.lengthSq() < R * R) {
-            found = true;
-			//FIXME: Add depth and points
-			const normal = sphereToCorner.normalized();
-			const info = new CollisionInfo({
-				normal,
-				depth: NaN,
-				points: []
-			});
-			Impulse.resolve(objA, objB, info);
-            return;
+    /**
+     * @param {Vector3} corner
+     * @returns {boolean} 
+     */
+    function sphereCorner(corner) {
+        const difference = corner.subed(objA.position);
+        if(difference.lengthSq() < shapeA.radius * shapeA.radius) {
+            const normal = difference.normalized();
+            const overlap = difference.length();
+            const info = new CollisionInfo({
+                normal,
+                points: [normal.muledScalar(-shapeA.radius).add(objA.position)],
+                penetration: Math.max(overlap - shapeA.radius, 0)
+            });
+            Impulse.resolve(objA, objB, info);
+            return true;
         }
+        return false;
     }
 
-    // Check side (plane) intersections
-    for(let i = 0; i < faces.length && found === false; i++){
-		const normal = faces[i].normal;
-        const face = faces[i].vertices;
+    /**
+     * @typedef sphereEdgeResult
+     * @property {Vector3} normal
+     * @property {Vector3} point
+     */
+    /**
+     * @param {Face} face 
+     * @returns {boolean}
+     */
+    function sphereFace(face) {
+        const planeNormal = face.normal
+            .clone()
+            .applyQuaternion(objB.quaternion);
 
-        // Get world-transformed normal of the face
-        const worldNormal = normal.clone().applyQuaternion(objB.quaternion);
+        const worldPoint = face.vertices[0]
+            .clone()
+            .applyQuaternion(objB.quaternion)
+            .add(objB.position);
 
-        // Get a world vertex from the face
-        const worldPoint = face[0].clone().applyQuaternion(objB.quaternion);
-        worldPoint.add(objB.position);
+        const distance = Math.abs(
+            worldPoint.dot(planeNormal)
+            -
+            objA.position.dot(planeNormal)
+        );
+            
+        const penetration = distance - shapeA.radius;
+        if (penetration > 0) return false;
 
-        // Get a point on the sphere, closest to the face normal
-        const worldSpherePointClosestToPlane = worldNormal.muledScalar(-R);
-        worldSpherePointClosestToPlane.add(objA.position);
+        const worldFaceVertices = face.vertices.map(vertex =>
+             vertex
+                .clone()
+                .applyQuaternion(objB.quaternion)
+                .add(objB.position)
+        );
 
-        // Vector from a face point to the closest point on the sphere
-        const penetrationVec = worldSpherePointClosestToPlane.subed(worldPoint);
+        const sphereClosestPoint = objA.position.added(planeNormal.muledScalar(-shapeA.radius));
 
-        // The penetration. Negative value means overlap.
-        const penetration = penetrationVec.dot(worldNormal);
+        if(!projectedPointInPolygon(worldFaceVertices, objA.position, planeNormal)) {
+            // Check for edges
 
-        const worldPointToSphere = objA.position.subed(worldPoint);
-
-        if(penetration < 0 && worldPointToSphere.dot(worldNormal) > 0) {
-            // Intersects plane. Now check if the sphere is inside the face polygon
-            const faceVerts = []; // Face vertices, in world coords
-            for(let j = 0; j < face.length; j++){
-                const worldVertex = face[j].clone().applyQuaternion(objB.quaternion);
-                worldVertex.add(objB.position);
-                faceVerts.push(worldVertex);
+            for(let i = 0; i < worldFaceVertices.length; i++) {
+                const vA = worldFaceVertices[(i) % worldFaceVertices.length];
+                const vB = worldFaceVertices[(i + 1) % worldFaceVertices.length];
+                const info = sphereEdge(vA, vB);
+                if(info !== null) Impulse.resolve(objA, objB, info);
             }
-
-            if(pointInPolygon(faceVerts,worldNormal,objA.position)){ // Is the sphere center in the face polygon?
-                found = true;
-                //FIXME: Add depth and points
-				const info = new CollisionInfo({
-					normal: worldNormal.negated(),
-					depth:NaN,
-					points: []
-				});
-                Impulse.resolve(objA, objB, info);
-
-                return; // We only expect *one* face contact
-            } else {
-                // Edge?
-                for(let j = 0; j < face.length; j++){
-
-                    // Get two world transformed vertices
-                    const v1 = face[(j+1)%face.length].clone().applyQuaternion(objB.quaternion);
-                    const v2 = face[(j+2)%face.length].clone().applyQuaternion(objB.quaternion);
-                    v1.add(objB.position);
-                    v1.add(objB.position);
-
-                    // Construct edge vector
-                    const edge = v2.subed(v1);
-
-                    // Construct the same vector, but normalized
-                    const edgeUnit = edge.normalized();
-                    if(edgeUnit.lengthSq() === 0) {
-                        edgeUnit.set(1,0,0);
-                    }
-
-                    const v1_to_xi = objA.position.subed(v1);
-                    const dot = v1_to_xi.dot(edgeUnit);
-                    // p is xi projected onto the edge
-                    const p = edgeUnit.muledScalar(dot);
-                    p.add(v1);
-
-                    // Compute a vector from p to the center of the sphere
-                    const xi_to_p = p.subed(objA.position);
-
-                    // Collision if the edge-sphere distance is less than the radius
-                    // AND if p is in between v1 and v2
-                    if(dot > 0 && dot*dot<edge.lengthSq() && xi_to_p.lengthSq() < R*R){ // Collision if the edge-sphere distance is less than the radius
-                        // Edge contact!
-                        //FIXME: Add depth and points
-                        const info = new CollisionInfo({
-                            normal: p.subed(objA.position).normalize(),
-                            points: [],
-                            depth: NaN
-                        });
-                        Impulse.resolve(objA, objB, info);
-
-                        return;
-                    }
-                }
-            }
+            return false;
         }
+    
+        // Create collision info object
+        const info = new CollisionInfo({
+            normal: planeNormal.clone(),
+            points: [sphereClosestPoint],
+            penetration
+        });
+    
+        // Resolve collision
+        Impulse.resolve(objA, objB, info);
+        return true;
+    }
+    /**
+     * @param {Vector3} vertexA - First vertex defining the edge.
+     * @param {Vector3} vertexB - Second vertex defining the edge.
+     * @returns {CollisionInfo | null} - Collision result if collision occurs, otherwise null.
+     */
+    function sphereEdge(vertexA, vertexB) {
+        // Calculate vector from one edge vertex to the sphere center
+        const edgeDirection = vertexB.subed(vertexA);
+        const edgeToPoint = objA.position.subed(vertexA);
+
+        // Calculate parameter t to find closest point on edge to sphere center
+        const t = edgeToPoint.dot(edgeDirection) / edgeDirection.lengthSq();
+
+        // Clamp t to the range [0, 1] to ensure closest point lies within edge segment
+        const clampedT = Math.max(0, Math.min(t, 1));
+
+        // Calculate closest point on edge to sphere center
+        const closestPoint = vertexA.added(edgeDirection.muledScalar(clampedT));
+
+        // Calculate distance between closest point and sphere center
+        const distanceSq = closestPoint.distanceToSq(objA.position);
+        const penetration = shapeA.radius - Math.sqrt(distanceSq);
+
+        // Check if distance is less than or equal to sphere radius
+        if(penetration < 0) return null;
+
+        // Calculate collision normal
+        const normal = closestPoint.subed(objA.position).normalize();
+
+        // Calculate collision point
+        const collisionPoint = objA.position.subed(normal.muledScalar(shapeA.radius - penetration));
+
+        return new CollisionInfo({
+            normal: normal.clone(),
+            points: [collisionPoint],
+            penetration
+        });
     }
 
-}
-/**
- * @param {Vector3[]} verts 
- * @param {Vector3} normal 
- * @param {Vector3} p 
- * @returns 
- */
-function pointInPolygon(verts, normal, p){
-    let positiveResult = null;
-    const N = verts.length;
-    for(let i = 0; i < N; i++) {
-        const v = verts[i];
-
-        // Get edge to the next vertex
-        const edge = verts[(i+1) % (N)].subed(v);
-
-        // Get cross product between polygon normal and the edge
-        const edge_x_normal = edge.crossed(normal);
-
-        // Get vector between point and current vertex
-        const vertex_to_p = p.subed(v);
-
-        // This dot product determines which side of the edge the point is
-        const r = edge_x_normal.dot(vertex_to_p);
-
-        // If all such dot products have same sign, we are inside the polygon.
-        if(positiveResult===null || (r>0 && positiveResult===true) || (r<=0 && positiveResult===false)){
-            if(positiveResult===null){
-                positiveResult = r>0;
-            }
-            continue;
-        } else {
-            return false; // Encountered some other sign. Exit.
-        }
+    for(const vertexLocal of shapeB.vertices) {
+        const vertex = vertexLocal
+            .clone()
+            .applyQuaternion(objB.quaternion)
+            .add(objB.position);
+        if(sphereCorner(vertex)) return;
     }
 
-    // If we got here, all dot products were of the same sign.
-    return true;
+    for(const face of shapeB.faces) {
+        if(sphereFace(face)) continue;//return;
+    }
 }
 
 /**
@@ -292,11 +271,12 @@ function sphereSphere(objA, objB, shapeA, shapeB) {
         (shapeA.radius + shapeB.radius)
 	);
 	if(distance < totalRadius) {
-        const normal = objA.position.clone().sub(objB.position).normalize();
+        const overlap = (shapeA.radius + shapeB.radius) - objA.position.distanceTo(objB.position);
+        const normal = objB.position.clone().sub(objA.position).normalize();
         const info = new CollisionInfo({
-            points: [objA.position.clone().add(normal.muledScalar(shapeA.radius))],
+            points: [objA.position.clone().add(normal.muledScalar(overlap))],
             normal,
-            depth: distance - totalRadius
+            penetration: Math.max(overlap, 0)
         });
 		Impulse.resolve(objA, objB, info);
 	}

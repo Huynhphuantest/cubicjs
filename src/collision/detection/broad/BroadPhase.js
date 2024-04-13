@@ -7,7 +7,7 @@ import { Body } from "../../../Cubic.js";
  * @property {Body} b
  */
 /**@abstract */
-export default class BroadPhase {
+export class BroadPhase {
 	/**
      * Return a list of potential collision.
      * @param {Body[]} objects 

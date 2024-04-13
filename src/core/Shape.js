@@ -1,5 +1,5 @@
 import { Vector3 } from "../Cubic.js";
-import AABB from "../collision/AABB.js";
+import { AABB } from "../collision/AABB.js";
 
 /**
  * @readonly
@@ -12,19 +12,16 @@ export const ShapeType = {
 	Trimesh:8
 };
 
-export default class Shape {
+export class Shape {
 	/**
      * @param {object} params
      * @param {ShapeType} params.type
-     * @param {number} [params.boundingSphereRadius]
      */
 	constructor({
-		type,
-		boundingSphereRadius
+		type
 	}) {
 		this.type = type;
 		this.parameters = {};
-		this.boundingSphereRadius = boundingSphereRadius;
 		this.AABB = new AABB(new Vector3(), new Vector3());
 	}
 	/**@abstract */
@@ -34,5 +31,14 @@ export default class Shape {
 	/**@abstract */
 	updateAABB() {
 		throw new Error("Not implemented");
+	}
+	/**
+	 * @param {number} mass
+	 * @returns {Vector3}
+	 * @abstract
+	 */
+	// eslint-disable-next-line
+	calculateInertia(mass) {
+		throw new Error("Not Implemented");
 	}
 }

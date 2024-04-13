@@ -1,8 +1,8 @@
 import { Vector3 } from "../Cubic.js";
-import AABB from "../collision/AABB.js";
-import Shape, { ShapeType } from "../core/Shape.js";
+import { AABB } from "../collision/AABB.js";
+import { Shape, ShapeType } from "../core/Shape.js";
 
-export default class Sphere extends Shape {
+export class Sphere extends Shape {
 	/**
      * @constructor
      * @param {number} radius
@@ -13,13 +13,26 @@ export default class Sphere extends Shape {
 			radius
 		};
 		this.radius = radius;
+		this.updateBoundingSphereRadius();
 		this.updateAABB();
 	}
 	updateAABB() {
-		const lengthVec = new Vector3(1,0,0).normalize().mulScalar(this.radius*1);
+		const lengthVec = new Vector3(1,0,0).normalize().mulScalar(this.radius);
 		this.AABB = new AABB(
 			lengthVec.negated(),
 			lengthVec
 		);
+	}
+	/** */
+	updateBoundingSphereRadius() {
+		this.boundingSphereRadius = this.radius;
+	}
+	/**
+	 * @param {number} mass 
+	 * @returns {Vector3}
+	 */
+	calculateInertia(mass) {
+		const I = 2.0 / 5.0 * mass * this.radius * this.radius;
+		return new Vector3(I, I, I);
 	}
 }

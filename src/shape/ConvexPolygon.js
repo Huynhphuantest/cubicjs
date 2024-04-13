@@ -1,35 +1,29 @@
 import { Vector3 } from "../Cubic.js";
-import Shape from "../core/Shape.js";
-import AABB from "../collision/AABB.js";
+import { Shape } from "../core/Shape.js";
+import { AABB } from "../collision/AABB.js";
 // eslint-disable-next-line no-unused-vars
-import Face from "../math/Face.js";
+import { Face } from "../math/Face.js";
 
-export default class ConvexPolygon extends Shape {
-	/**@type {Vector3 | null} */
-	#furthestVertex = null;
-	/**@type {Vector3 | null} */
-	#nearestVertex = null;
+export class ConvexPolygon extends Shape {
 	/**
      * @constructor
      * @param {object} params
      * @param {number} params.type
      * @param {Vector3[]} params.vertices
      * @param {Face[]} params.faces
-     * @param {Vector3[]} params.aces
+     * @param {Vector3[]} params.axes
      */
 	constructor({
 		type,
 		vertices,
 		faces,
-		aces
+		axes,
 	}) {
 		super({type});
 		this.vertices = vertices;
 		this.faces = faces;
-		this.aces = aces;
+		this.axes = axes;
 		this.needVerticesUpdate = false;
-		this.updateBoundingSphereRadius();
-		this.updateAABB();
 	}
 
 	//     ULITIES
@@ -39,8 +33,6 @@ export default class ConvexPolygon extends Shape {
      * @returns {Vector3}
      */
 	getFurthestVertex() {
-		if(this.#furthestVertex != null)
-			return this.#furthestVertex;
 		let furthestVertex;
 		let furthestDistance = -Infinity;
 		for(const vertex of this.vertices) {
@@ -51,7 +43,6 @@ export default class ConvexPolygon extends Shape {
 			}
 		}
 		if(furthestVertex === undefined) throw new Error("This ConvexPolygons does not contain any vertex");
-		this.#furthestVertex = furthestVertex;
 		return furthestVertex.clone();
 	}
 
@@ -60,8 +51,6 @@ export default class ConvexPolygon extends Shape {
      * @returns {Vector3}
      */
 	getNearestVertex() {
-		if(this.#nearestVertex != null)
-			return this.#nearestVertex;
 		let nearestVertex;
 		let nearestDistance = Infinity;
 		for(const vertex of this.vertices) {
@@ -72,7 +61,6 @@ export default class ConvexPolygon extends Shape {
 			}
 		}
 		if(nearestVertex === undefined) throw new Error("This ConvexPolygons does not contain any vertex");
-		this.#nearestVertex = nearestVertex;
 		return nearestVertex.clone();
 	}
 
@@ -94,7 +82,6 @@ export default class ConvexPolygon extends Shape {
 		if(furthestVertex === undefined) throw new Error("This ConvexPolygon does not contain any vertex");
 		return furthestVertex.clone();
 	}
-	/** */
 	updateBoundingSphereRadius() {
 		this.boundingSphereRadius = this.getFurthestVertex().length();
 	}

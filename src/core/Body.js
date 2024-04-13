@@ -1,8 +1,8 @@
 // eslint-disable-next-line no-unused-vars
-import { Vector3, World, Quaternion, Material, ConvexPolygon, Sphere } from "../Cubic.js";
-import AABB from "../collision/AABB.js";
+import { Vector3, World, Quaternion, Material, ConvexPolygon, Sphere, Mat3 } from "../Cubic.js";
+import { AABB } from "../collision/AABB.js";
 // eslint-disable-next-line no-unused-vars
-import Shape from "./Shape.js";
+import { Shape } from "./Shape.js";
 
 /**
  * @readonly
@@ -25,19 +25,35 @@ export class Body {
 	constructor({
 		shapes = [],
 		mass = 1,
-		material = new Material({restitution: 0.1})
+		material = new Material({restitution: 0.1}),
 	}) {
 		this.shapes = shapes instanceof Array ? shapes : [shapes];
 		this.type = BodyType.DYNAMIC;
-		this.mass = mass;
-		this.invMass = this.mass === 0 ? 0 : 1 / this.mass;
+
+		
 		this.name = "UnamedObject";
 		this.material = material;
-
+		
 		this.position = new Vector3();
 		this.velocity = new Vector3();
+		
 		this.quaternion = new Quaternion();
 		this.angularVelocity = new Vector3();
+		
+		this.mass = mass;
+		/**@type number */
+		this.invMass;
+
+		//TODO: Add a case where shapes.length is greater than 0
+		this.inertia = this.shapes[0].calculateInertia(this.mass);
+		this.invInertia = new Vector3();
+		/**@type {number} */
+		this.inertiaScalar;
+		/**@type {number} */
+		this.invInertiaScalar;
+
+		this.updateMass();
+
 		/**@description Local */
 		this.AABB = new AABB(
 			new Vector3(),
@@ -72,11 +88,12 @@ export class Body {
 	update(world, deltaTime) {
 		// VELOCITY
 		if(this.mass !== 0) {
-			this.position.add(this.velocity.clone().mulScalar(deltaTime));
-			if(!this.angularVelocity.isZero()) {
-				const newQuat = new Quaternion().setFromAxisAngle(this.angularVelocity, this.angularVelocity.length()*deltaTime);
-				this.quaternion.mulQuaternion(newQuat);
-			}
+			this.position.add(this.velocity.muledScalar(deltaTime));
+		}
+		if(!this.angularVelocity.isZero()) {
+			//TODO:
+			const newQuat = new Quaternion().setFromAxisAngle(this.angularVelocity.normalized(), this.angularVelocity.length()*deltaTime);
+			this.quaternion.mulQuaternion(newQuat);
 		}
 
 
@@ -90,7 +107,7 @@ export class Body {
 		}
 		if(this.mass != this.previousInfo.mass) {
 			this.previousInfo.mass = this.mass;
-			this.invMass = this.mass == 0 ? 0 : 1 / this.mass;
+			this.updateMass();
 		}
 	}
 	updateWorldPositionAABB() {
@@ -134,5 +151,16 @@ export class Body {
 		for(const shape of this.shapes) {
 			this.AABB.extend(shape.AABB);
 		}
+	}
+	updateMass() {
+		this.invMass = this.mass == 0 ? 0 : 1 / this.mass;
+		const I = this.inertia;
+		this.invInertia.set(
+			I.x > 0 ? 1.0 / I.x : 0,
+			I.y > 0 ? 1.0 / I.y : 0,
+			I.z > 0 ? 1.0 / I.z : 0
+		);
+		this.inertiaScalar = I.x + I.y + I.z;
+		this.invInertiaScalar = this.inertiaScalar == 0 ? 0 : 1 / this.inertiaScalar;
 	}
 }

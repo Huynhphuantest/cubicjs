@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import { Vector3 } from "../Cubic.js";
 
-export default class AABB {
+export class AABB {
 	/**
      * @param {Vector3} lowerBound 
      * @param {Vector3} upperBound 

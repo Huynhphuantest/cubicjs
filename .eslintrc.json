@@ -22,6 +22,7 @@
         ],
         "no-unused-vars": "warn",
         "no-var": "warn",
-        "no-console": "warn"
+        "no-console": "warn",
+        "no-constant-condition": "off"
     }
 }

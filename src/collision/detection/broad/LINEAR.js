@@ -6,12 +6,18 @@
 
 // eslint-disable-next-line no-unused-vars
 import { Body } from "../../../Cubic.js";
-import BroadPhase from "./BroadPhase.js";
 
+/**
+ * @typedef {import('./BroadPhase.js').BroadPhase} BroadPhase
+ */
 /**
  * @typedef {import('./BroadPhase.js').PotentialCollisionPair} PotentialCollisionPair
  */
-class LINEARAlgorithm extends BroadPhase {
+
+/**
+ * @type {BroadPhase}
+ */
+export const LINEAR = {
 	/**
      * @override
      * @param {Body[]} objects
@@ -31,7 +37,4 @@ class LINEARAlgorithm extends BroadPhase {
 		}
 		return pairs;
 	}
-}
-
-const LINEAR = new LINEARAlgorithm();
-export default LINEAR;
+};
