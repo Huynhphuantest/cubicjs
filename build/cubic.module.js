@@ -83,7 +83,9 @@ const ShapeType = {
 	Box:1,
 	Sphere:2,
 	Plane:4,
-	Trimesh:8
+	Cylinder: 8,
+	ConvexPolygon: 16,
+	Trimesh: 32,
 };
 
 class Shape {
@@ -478,10 +480,6 @@ class Quaternion {
 
 // eslint-disable-next-line no-unused-vars
 
-/**
- * 3 Dimensional Vector
- * @implements Vector
- */
 class Vector3 {
 	/**
      * @constructor
@@ -495,18 +493,6 @@ class Vector3 {
 		this.x = x ?? 0;
 		this.y = y ?? 0;
 		this.z = z ?? 0;
-		this.text = 'hi';
-		this.isQuaternion = false;
-		this.metaData = {
-			when: '1 milisecond ago',
-			link: 'Youtube.com',
-			hehe: 179937,
-			date: {
-				day: 1,
-				month: 'febuary',
-				isLeapYear: true
-			}
-		};
 	}
 	/**
      * @param {number|Vector3} x 
@@ -955,6 +941,7 @@ class ConvexPolygon extends Shape {
 		axes,
 	}) {
 		super({type});
+		this.type = ShapeType.ConvexPolygon;
 		this.vertices = vertices;
 		this.faces = faces;
 		this.axes = axes;
@@ -1241,7 +1228,7 @@ class CollisionInfo {
 
 // eslint-disable-next-line no-unused-vars
 
-var Impulse = {
+const Impulse = {
 	/**
      * @param {Body} objA
      * @param {Body} objB
@@ -1609,37 +1596,19 @@ class Body {
 	}
 }
 
-/* eslint-disable */
-
-/**
- * @typedef PotentialCollisionPair
- * @property {Body} a
- * @property {Body} b
- */
-/**@abstract */
-class BroadPhase {
-	/**
-     * Return a list of potential collision.
-     * @param {Body[]} objects 
-     * @returns {PotentialCollisionPair[]}
-     */
-	getPotentialCollision(objects) {
-		throw new Error("Not implemented");
-	}
-}
-
 // eslint-disable-next-line no-unused-vars
 
-
 /**
- * @typedef Checkable
- * @property {AABB} AABB
+ * @typedef {import('./BroadPhase.js').BroadPhase} BroadPhase
  */
 /**
  * @typedef {import('./BroadPhase.js').PotentialCollisionPair} PotentialCollisionPair
  */
 
-class SAPAlgorithm extends BroadPhase {
+/**
+ * @type {BroadPhase}
+ */
+const SAP = {
 	/**
      * @param {Body[]} objects
      * @returns {PotentialCollisionPair[]}
@@ -1681,9 +1650,7 @@ class SAPAlgorithm extends BroadPhase {
 		}
 		return pairs;
 	}
-}
-
-const SAP = new SAPAlgorithm();
+};
 
 /**
  * @typedef {import("./NarrowPhase.js").CollisionResult} CollisionResult
@@ -1695,7 +1662,8 @@ const SAP = new SAPAlgorithm();
  * @property {number} max
 */
 
-var SAT = {
+
+const SAT = {
 	/**
      * @param {ConvexPolygon} a
      * @param {ConvexPolygon} b
@@ -2215,6 +2183,9 @@ function convexConvex(objA, objB, shapeA, shapeB) {
     }
 }
 
+const MATERIALS_RESTITUTION = {
+
+};
 class Material {
 	/**
      * This define how rough / elastic / ... a surface of an shape should be
@@ -2226,4 +2197,4 @@ class Material {
 	}
 }
 
-export { AABB, Body, Box, ConvexPolygon, Face, Impulse, Mat3, Material, Quaternion, Shape, Sphere, Vector3, World };
+export { AABB, Body, Box, ConvexPolygon, Face, Impulse, MATERIALS_RESTITUTION, Mat3, Material, Quaternion, Shape, ShapeType, Sphere, Vector3, World };

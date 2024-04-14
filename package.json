@@ -2,10 +2,12 @@
   "name": "cubicjs",
   "version": "0.1.2",
   "description": "A Javascript physics libary",
-  "main": "./build/cubic.module.js",
   "type": "module",
+  "main": "./build/cubic.module.js",
+  "types": "./dist/Cubic.d.ts",
   "scripts": {
-    "build": "rollup -c build/rollup.config.mjs"
+    "watch": "npx tsc --watch",
+    "build": "npx tsc && rollup -c rollup.config.mjs"
   },
   "repository": {
     "type": "git",
@@ -24,15 +26,13 @@
   "homepage": "https://github.com/huynhphuantest/Cubicjs#readme",
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.56.0",
     "rollup": "^4.14.1",
     "three": "^0.160.0",
-    "typescript": "^5.3.3",
+    "typescript": "^5.4.5",
     "vite": "^5.0.12"
-  },
-  "dependencies": {
-    "ts-migrate": "^0.1.35"
   }
 }

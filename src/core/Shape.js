@@ -9,7 +9,9 @@ export const ShapeType = {
 	Box:1,
 	Sphere:2,
 	Plane:4,
-	Trimesh:8
+	Cylinder: 8,
+	ConvexPolygon: 16,
+	Trimesh: 32,
 };
 
 export class Shape {

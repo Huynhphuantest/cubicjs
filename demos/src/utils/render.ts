@@ -30,19 +30,19 @@ export function init() {
 
     const controls = new OrbitControls( camera, renderer.domElement );
 
-    camera.position.set( 0, 100, 200 );
+    camera.position.set( 0, 10, 20 );
     controls.update();
     
     renderer.domElement.id = "screen";
     document.body.appendChild(renderer.domElement);
-    animate();
     return {
+        renderer,
+        camera,
+        scene,
         animate
     };   
 }
 function animate() {
-    
-    requestAnimationFrame( animate );
     
     const renderStartTime = performance.now();
 
@@ -53,17 +53,26 @@ function animate() {
 }
 
 let logger:HTMLUListElement;
-export function log(...messages:string[]) {
+export function log(...messages:unknown[]) {
     if(logger === undefined) initLog();
     messages.forEach(e => {
+        if(e === undefined || e === null) return;
         let messageDOM;
-        if(typeof e === 'object') {
-            if(!Array.isArray(e)) messageDOM = logJSON(e);
-            else messageDOM = document.createElement('div');
-        }
-        else {
-            messageDOM = document.createElement("li")
-            messageDOM.appendChild(document.createTextNode(e));
+        
+        switch (typeof e) {
+            case 'object':
+                if(!Array.isArray(e)) messageDOM = logJSON(e);
+                else messageDOM = document.createElement('div');
+                break;
+            case 'string':
+                messageDOM = document.createElement("li")
+                messageDOM.appendChild(document.createTextNode(e));
+                break;
+            case 'boolean':
+            case 'number':
+                messageDOM = document.createElement("li")
+                messageDOM.appendChild(document.createTextNode(`${e}`));
+                break;
         }
         //@ts-ignore
         logger.appendChild(messageDOM);
@@ -75,12 +84,12 @@ export function log(...messages:string[]) {
     });
 }
 
-export let SPACE_SIZE = 2;
+export let SPACE_SIZE = 3;
 export let LOG_COLOR_PALLET = {
-    KEY: 'ffff00',
+    KEY: 'dddd00',
     VALUE: {
-        NUMBER: 'ffdd00',
-        STRING: '44dd88',
+        NUMBER: 'ffbb22',
+        STRING: '77aa99',
         BOOLEAN: {
             TRUE: 'aaccff',
             FALSE: 'dd4411'
@@ -99,6 +108,8 @@ export let NUMBER_MAX_DECIMAL_POINT = 2;
 let chToPx = 0;
 
 export function logJSON(obj:Object, translate = 0) {
+    //if(obj === null) throw new TypeError('Type of obj must not be null')
+    if(obj === null) return createNode('null');
     const result = document.createElement('li');
     result.style.listStyle = 'none';
     function createSpace(amount:number) {
@@ -141,7 +152,8 @@ export function logJSON(obj:Object, translate = 0) {
     );
     startLine.style.translate = '';
     space += 1;
-    for(const [key, value] of Object.entries(obj)) {
+    const entries = Object.entries(obj);
+    entries.forEach( ([key, value], index) => {
         const line = createLine();
         const keyNode = createNode(key, WEIGHTS.THIN,LOG_COLOR_PALLET.KEY);
         line.appendChild(keyNode);
@@ -190,7 +202,7 @@ export function logJSON(obj:Object, translate = 0) {
             //TODO: ADD ARRAY LOG
         }
         line.appendChild(valueNode);
-    }
+    } );
     space -= 1;
     createLine('}');
     return result;

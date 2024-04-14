@@ -24,5 +24,8 @@
         "no-var": "warn",
         "no-console": "warn",
         "no-constant-condition": "off"
-    }
+    },
+    "ignorePatterns": [
+        "build/**/*"
+    ]
 }

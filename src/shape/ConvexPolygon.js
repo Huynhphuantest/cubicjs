@@ -1,5 +1,5 @@
 import { Vector3 } from "../Cubic.js";
-import { Shape } from "../core/Shape.js";
+import { Shape, ShapeType } from "../core/Shape.js";
 import { AABB } from "../collision/AABB.js";
 // eslint-disable-next-line no-unused-vars
 import { Face } from "../math/Face.js";
@@ -8,18 +8,19 @@ export class ConvexPolygon extends Shape {
 	/**
      * @constructor
      * @param {object} params
-     * @param {number} params.type
+     * @param {number} [params.type]
      * @param {Vector3[]} params.vertices
      * @param {Face[]} params.faces
      * @param {Vector3[]} params.axes
      */
 	constructor({
-		type,
+		type = ShapeType.ConvexPolygon,
 		vertices,
 		faces,
 		axes,
 	}) {
 		super({type});
+		this.type = type;
 		this.vertices = vertices;
 		this.faces = faces;
 		this.axes = axes;

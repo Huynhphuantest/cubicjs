@@ -55,7 +55,7 @@ function buildShape(w, h, d) {
 	};
 }
 
-export default class Box extends ConvexPolygon {
+export class Box extends ConvexPolygon {
 	/**
      * @constructor
      * @param {number|Vector3} width
