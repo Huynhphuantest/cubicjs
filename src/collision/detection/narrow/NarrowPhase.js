@@ -1,7 +1,7 @@
 /* eslint no-unused-vars: 0 */
 
-import { Vector3, Body, ConvexPolygon } from "../../../Cubic.js";
-import { CollisionInfo } from "../../CollisionInfo.js";
+import { Vector3, Body, ConvexPolygon } from '../../../Cubic.js';
+import { CollisionInfo } from '../../CollisionInfo.js';
 
 /**
  * @typedef CollisionResult
@@ -9,11 +9,11 @@ import { CollisionInfo } from "../../CollisionInfo.js";
  */
 
 /**
- * This interface define what every 
+ * This interface define what every
  * collision detection algorithm should have.
  * @interface
  */
-export function NarrowPhase() {}
+export function NarrowPhase () {}
 /**
  * @param {ConvexPolygon} a
  * @param {ConvexPolygon} b
@@ -21,8 +21,8 @@ export function NarrowPhase() {}
  * @param {Body} objB
  * @returns {CollisionResult}
  */
-NarrowPhase.prototype.isColliding = function(a, b, objA, objB) {
-	throw Error("Not implemented");
+NarrowPhase.prototype.isColliding = function (a, b, objA, objB) {
+	throw Error('Not implemented');
 };
 /**
  * @param {Body} objA
@@ -31,6 +31,6 @@ NarrowPhase.prototype.isColliding = function(a, b, objA, objB) {
  * @param {ConvexPolygon} shapeB
  * @returns {Vector3[]}
  */
-export function findContactPoints(objA, objB, shapeA, shapeB) {
-	return [new Vector3(0,0,0)];
+export function findContactPoints (objA, objB, shapeA, shapeB) {
+	return [new Vector3(0, 0, 0)];
 }

@@ -18,9 +18,9 @@ export class Shape {
     type: number;
     parameters: {};
     AABB: AABB;
-    /**@abstract */
+    /** @abstract */
     updateBoundingSphereRadius(): void;
-    /**@abstract */
+    /** @abstract */
     updateAABB(): void;
     /**
      * @param {number} mass
@@ -29,5 +29,5 @@ export class Shape {
      */
     calculateInertia(mass: number): Vector3;
 }
-import { AABB } from "../collision/AABB.js";
-import { Vector3 } from "../Cubic.js";
+import { AABB } from '../collision/AABB.js';
+import { Vector3 } from '../Cubic.js';

@@ -5,7 +5,7 @@
 // this is just an example of a broad phase algorithm
 
 // eslint-disable-next-line no-unused-vars
-import { Body } from "../../../Cubic.js";
+import { Body } from '../../../Cubic.js';
 
 /**
  * @typedef {import('./BroadPhase.js').BroadPhase} BroadPhase
@@ -23,12 +23,12 @@ export const LINEAR = {
      * @param {Body[]} objects
      * @returns {PotentialCollisionPair[]}
      */
-	getPotentialCollision(objects) {
-		/**@type {PotentialCollisionPair[]} */
+	getPotentialCollision (objects) {
+		/** @type {PotentialCollisionPair[]} */
 		const pairs = [];
-		for(const obj of objects) {
-			for(const potential of objects) {
-				if(potential === obj) continue;
+		for (const obj of objects) {
+			for (const potential of objects) {
+				if (potential === obj) continue;
 				pairs.push({
 					a: obj,
 					b: potential

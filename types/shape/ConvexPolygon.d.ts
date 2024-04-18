@@ -2,13 +2,13 @@ export class ConvexPolygon extends Shape {
     /**
      * @constructor
      * @param {object} params
-     * @param {number} params.type
+     * @param {number} [params.type]
      * @param {Vector3[]} params.vertices
      * @param {Face[]} params.faces
      * @param {Vector3[]} params.axes
      */
-    constructor({ type, vertices, faces, axes, }: {
-        type: number;
+    constructor({ type, vertices, faces, axes }: {
+        type?: number | undefined;
         vertices: Vector3[];
         faces: Face[];
         axes: Vector3[];
@@ -35,6 +35,6 @@ export class ConvexPolygon extends Shape {
     getFurthestVertexInDirection(direction: Vector3): Vector3;
     boundingSphereRadius: number | undefined;
 }
-import { Shape } from "../core/Shape.js";
-import { Vector3 } from "../Cubic.js";
-import { Face } from "../math/Face.js";
+import { Shape } from '../core/Shape.js';
+import { Vector3 } from '../Cubic.js';
+import { Face } from '../math/Face.js';

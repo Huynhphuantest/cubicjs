@@ -7,7 +7,7 @@ export class Quaternion {
    * @param {number} [w]
    */
     constructor(x?: number | undefined, y?: number | undefined, z?: number | undefined, w?: number | undefined);
-    /**@readonly */
+    /** @readonly */
     readonly isQuaternion: boolean;
     x: number;
     y: number;
@@ -112,4 +112,4 @@ export class Quaternion {
    */
     equals(target: Quaternion): boolean;
 }
-import { Vector3 } from "./Vector3.js";
+import { Vector3 } from './Vector3.js';

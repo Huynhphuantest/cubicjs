@@ -17,6 +17,6 @@ export type boxShape = {
     faces: Face[];
     axes: Vector3[];
 };
-import { ConvexPolygon } from "./ConvexPolygon.js";
-import { Vector3 } from "../Cubic.js";
-import { Face } from "../math/Face.js";
+import { ConvexPolygon } from './ConvexPolygon.js';
+import { Vector3 } from '../Cubic.js';
+import { Face } from '../math/Face.js';

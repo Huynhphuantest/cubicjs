@@ -15,4 +15,4 @@ export class CollisionInfo {
     normal: Vector3;
     penetration: number;
 }
-import { Vector3 } from "../Cubic.js";
+import { Vector3 } from '../Cubic.js';

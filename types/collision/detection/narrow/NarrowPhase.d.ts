@@ -29,7 +29,7 @@ export function findContactPoints(objA: Body, objB: Body, shapeA: ConvexPolygon,
 export type CollisionResult = {
     info: null | CollisionInfo;
 };
-import { ConvexPolygon } from "../../../Cubic.js";
-import { Body } from "../../../Cubic.js";
-import { Vector3 } from "../../../Cubic.js";
-import { CollisionInfo } from "../../CollisionInfo.js";
+import { ConvexPolygon } from '../../../Cubic.js';
+import { Body } from '../../../Cubic.js';
+import { Vector3 } from '../../../Cubic.js';
+import { CollisionInfo } from '../../CollisionInfo.js';

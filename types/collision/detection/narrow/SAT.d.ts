@@ -14,14 +14,12 @@ export namespace SAT {
      */
     /**
      * @param {ConvexPolygon} shapeA
-     * @param {ConvexPolygon} shapeB
      * @param {Body} objA
-     * @param {Body} objB
      * @param {Vector3[]} worldAVertices
      * @param {Vector3[]} worldBVertices
      * @returns {null | seperatingAxisResult}
      */
-    function separatingAxis(shapeA: ConvexPolygon, shapeB: ConvexPolygon, objA: Body, objB: Body, worldAVertices: Vector3[], worldBVertices: Vector3[]): {
+    function separatingAxis(shapeA: ConvexPolygon, objA: Body, worldAVertices: Vector3[], worldBVertices: Vector3[]): {
         penetration: number;
         axis: Vector3;
     } | null;
@@ -63,6 +61,6 @@ export type Projection = {
     min: number;
     max: number;
 };
-import { ConvexPolygon } from "../../../shape/ConvexPolygon.js";
-import { Body } from "../../../Cubic.js";
-import { Vector3 } from "../../../Cubic.js";
+import { ConvexPolygon } from '../../../shape/ConvexPolygon.js';
+import { Body } from '../../../Cubic.js';
+import { Vector3 } from '../../../Cubic.js';
