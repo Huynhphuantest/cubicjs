@@ -156,15 +156,20 @@ export class Body extends EventDispatcher {
 	}
 
 	updateMass () {
-		this.invMass = this.mass == 0 ? 0 : 1 / this.mass;
+		this.invMass = this.mass === 0 ? 0 : 1 / this.mass;
 		const I = this.inertia;
-		this.invInertia.set(
-			I.x > 0 ? 1.0 / I.x : 0,
-			I.y > 0 ? 1.0 / I.y : 0,
-			I.z > 0 ? 1.0 / I.z : 0
+		I.set(0,0,0);
+		const iI = this.invInertia;
+		this.shapes.forEach((shape) => {
+			I.add(shape.calculateInertia(this.mass));
+		});
+		iI.set(
+			I.x === 0 ? 0 : 1.0 / I.x,
+			I.y === 0 ? 0 : 1.0 / I.y,
+			I.z === 0 ? 0 : 1.0 / I.z
 		);
 		this.inertiaScalar = I.x + I.y + I.z;
-		this.invInertiaScalar = this.inertiaScalar == 0 ? 0 : 1 / this.inertiaScalar;
+		this.invInertiaScalar = iI.x + iI.y + iI.z;
 	}
 
 	/**

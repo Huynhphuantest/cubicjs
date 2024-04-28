@@ -117,9 +117,9 @@ class Shape {
 		throw new Error('Not implemented');
 	}
 	/**
+	 * @abstract
 	 * @param {number} mass
 	 * @returns {Vector3}
-	 * @abstract
 	 */
 	// eslint-disable-next-line
 	calculateInertia(mass) {
@@ -1256,7 +1256,7 @@ const Impulse = {
      * @param {CollisionInfo} info
      */
 	resolve (objA, objB, info) {
-		this.penetrationResolution(objA, objB, info);
+		//this.penetrationResolution(objA, objB, info);
 		this.applyImpulse(objA, objB, info);
 	},
 	/**
@@ -1293,9 +1293,10 @@ const Impulse = {
 			const N = info.normal;
 
 			const
-				ra = contact.subed(objA.position);
-			const rb = contact.subed(objB.position);
-			const unitVec = new Vector3(0, 0, 1);
+				ra = contact.subed(objA.position),
+				rb = contact.subed(objB.position);
+			// Perpendicular vector
+			const unitVec = new Vector3(0,0,1);
 			const raPerp = ra.crossed(unitVec);
 			const rbPerp = rb.crossed(unitVec);
 			if (raPerp.lengthSq() === 0) raPerp.set(0, 0, 1);
@@ -1304,10 +1305,12 @@ const Impulse = {
 			const e = objA.material.restitution * objB.material.restitution;
 
 			const Vr =
-				objA.velocity.added(raPerp.muled(objA.angularVelocity))
-				  .sub(
+				(
+					objA.velocity.added(raPerp.muled(objA.angularVelocity))
+				)
+					.sub(
 				    objB.velocity.added(rbPerp.muled(objB.angularVelocity))
-				  );
+					);
 
 			const contactMag = Vr.dot(N);
 			// Collision already resolved
@@ -1697,15 +1700,20 @@ class Body extends EventDispatcher {
 	}
 
 	updateMass () {
-		this.invMass = this.mass == 0 ? 0 : 1 / this.mass;
+		this.invMass = this.mass === 0 ? 0 : 1 / this.mass;
 		const I = this.inertia;
-		this.invInertia.set(
-			I.x > 0 ? 1.0 / I.x : 0,
-			I.y > 0 ? 1.0 / I.y : 0,
-			I.z > 0 ? 1.0 / I.z : 0
+		I.set(0,0,0);
+		const iI = this.invInertia;
+		this.shapes.forEach((shape) => {
+			I.add(shape.calculateInertia(this.mass));
+		});
+		iI.set(
+			I.x === 0 ? 0 : 1.0 / I.x,
+			I.y === 0 ? 0 : 1.0 / I.y,
+			I.z === 0 ? 0 : 1.0 / I.z
 		);
 		this.inertiaScalar = I.x + I.y + I.z;
-		this.invInertiaScalar = this.inertiaScalar == 0 ? 0 : 1 / this.inertiaScalar;
+		this.invInertiaScalar = iI.x + iI.y + iI.z;
 	}
 
 	/**
@@ -1834,8 +1842,16 @@ const SAT = {
 				.applyQuaternion(objB.quaternion)
 				.add(objB.position)
 		);
-		const resultA = this.separatingAxis(a, objA, worldAVertices, worldBVertices);
-		const resultB = this.separatingAxis(b, objB, worldBVertices, worldAVertices);
+		const worldAAxes = a.axes.map(v =>
+			v.clone()
+				.applyQuaternion(objA.quaternion)
+		);
+		const worldBAxes = b.axes.map(v =>
+			v.clone()
+				.applyQuaternion(objB.quaternion)
+		);
+		const resultA = this.separatingAxis(worldAAxes, worldAVertices, worldBVertices);
+		const resultB = this.separatingAxis(worldBAxes, worldBVertices, worldAVertices);
 		if (resultA !== null && resultB !== null) {
 			let result;
 			if (resultA.penetration < resultB.penetration) { result = resultA; } else { result = resultB; }
@@ -1843,9 +1859,7 @@ const SAT = {
 			return {
 				info: new CollisionInfo({
 					normal: result.axis,
-					points: result === resultA
-						? this.findContactPoints(a, b, objA, objB)
-						: this.findContactPoints(b, a, objB, objA),
+					points: this.findContactPoints(worldAVertices, worldBVertices, worldAAxes, worldBAxes),
 					penetration: result.penetration
 				})
 			};
@@ -1860,17 +1874,15 @@ const SAT = {
      * @property {Vector3} axis
      */
 	/**
-     * @param {ConvexPolygon} shapeA
-     * @param {Body} objA
+	 * @param {Vector3[]} axes
      * @param {Vector3[]} worldAVertices
      * @param {Vector3[]} worldBVertices
      * @returns {null | seperatingAxisResult}
      */
-	separatingAxis (shapeA, objA, worldAVertices, worldBVertices) {
+	separatingAxis (axes, worldAVertices, worldBVertices) {
 		let minDepth = Infinity;
 		const axisFound = new Vector3();
-		for (const axisLocal of shapeA.axes) {
-			const axis = axisLocal.clone().applyQuaternion(objA.quaternion);
+		for (const axis of axes) {
 			const { min: minA, max: maxA } = this.project(worldAVertices, axis);
 			const { min: minB, max: maxB } = this.project(worldBVertices, axis);
 
@@ -1929,49 +1941,37 @@ const SAT = {
 	},
 
 	/**
-     * @param {ConvexPolygon} shapeA
-     * @param {ConvexPolygon} shapeB
-     * @param {Body} objA
-     * @param {Body} objB
+     * @param {Vector3[]} worldAVertices
+     * @param {Vector3[]} worldBVertices
+	 * @param {Vector3[]} axesA
+	 * @param {Vector3[]} axesB
      * @returns {Vector3[]}
      */
-	findContactPoints (shapeA, shapeB, objA, objB) {
+	findContactPoints (worldAVertices, worldBVertices, axesA, axesB) {
 		/** @type {Vector3[]} */
 		const contactPoints = [];
 
-		const vertices1 = shapeA.vertices.map(vertex => vertex
-			.clone()
-			.applyQuaternion(objA.quaternion)
-			.add(objA.position)
-		);
-		const vertices2 = shapeB.vertices.map(vertex => vertex
-			.clone()
-			.applyQuaternion(objB.quaternion)
-			.add(objB.position)
-		);
-
-		const allVerticesAOverlapB = this.filterVerticesIntersectingShape(vertices1, shapeB, objB);
+		const allVerticesAOverlapB = this.filterVerticesIntersectingShape(worldAVertices, worldBVertices, axesB);
 		contactPoints.push(...allVerticesAOverlapB);
-		const allVerticesBOverlapA = this.filterVerticesIntersectingShape(vertices2, shapeA, objA);
+		const allVerticesBOverlapA = this.filterVerticesIntersectingShape(worldBVertices, worldAVertices, axesA);
 		contactPoints.push(...allVerticesBOverlapA);
 
 		return contactPoints;
 	},
 
 	/**
-     * @param {Vector3[]} worldVertices
-     * @param {ConvexPolygon} shape
-     * @param {Body} obj
+     * @param {Vector3[]} worldAVertices
+	 * @param {Vector3[]} worldBVertices
+	 * @param {Vector3[]} axes
      * @returns {Vector3[]}
      */
-	filterVerticesIntersectingShape (worldVertices, shape, obj) {
+	filterVerticesIntersectingShape (worldAVertices, worldBVertices, axes) {
 		/** @type {Vector3[]} */
-		let filtered = worldVertices;
-		for (const axisLocal of shape.axes) {
+		let filtered = worldAVertices;
+		for (const axis of axes) {
 			/** @type {Vector3[]} */
 			const filteredInAxis = [];
-			const axis = axisLocal.applyQuaternion(obj.quaternion);
-			const { min, max } = this.project(shape.vertices, axis);
+			const { min, max } = this.project(worldBVertices, axis);
 			for (const vertex of filtered) {
 				const projection = vertex.dot(axis);
 				if (projection > min && projection < max) filteredInAxis.push(vertex);

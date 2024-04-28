@@ -37,9 +37,9 @@ export class Shape {
 		throw new Error('Not implemented');
 	}
 	/**
+	 * @abstract
 	 * @param {number} mass
 	 * @returns {Vector3}
-	 * @abstract
 	 */
 	// eslint-disable-next-line
 	calculateInertia(mass) {

@@ -23,9 +23,9 @@ export class Shape {
     /** @abstract */
     updateAABB(): void;
     /**
+     * @abstract
      * @param {number} mass
      * @returns {Vector3}
-     * @abstract
      */
     calculateInertia(mass: number): Vector3;
 }

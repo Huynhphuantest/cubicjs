@@ -47,9 +47,10 @@ export const Impulse = {
 			const N = info.normal;
 
 			const
-				ra = contact.subed(objA.position);
-			const rb = contact.subed(objB.position);
-			const unitVec = new Vector3(0, 0, 1);
+				ra = contact.subed(objA.position),
+				rb = contact.subed(objB.position);
+			// Perpendicular vector
+			const unitVec = new Vector3(0,0,1);
 			const raPerp = ra.crossed(unitVec);
 			const rbPerp = rb.crossed(unitVec);
 			if (raPerp.lengthSq() === 0) raPerp.set(0, 0, 1);
@@ -58,10 +59,12 @@ export const Impulse = {
 			const e = objA.material.restitution * objB.material.restitution;
 
 			const Vr =
-				objA.velocity.added(raPerp.muled(objA.angularVelocity))
-				  .sub(
+				(
+					objA.velocity.added(raPerp.muled(objA.angularVelocity))
+				)
+				.sub(
 				    objB.velocity.added(rbPerp.muled(objB.angularVelocity))
-				  );
+				);
 
 			const contactMag = Vr.dot(N);
 			// Collision already resolved

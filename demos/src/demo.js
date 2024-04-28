@@ -30,19 +30,20 @@ add(Ground);
 
 
 const Spinner = new CUBIC.Body({
-    shapes: new CUBIC.Box(1, 10, groundSize),
+    shapes: new CUBIC.Box(2, 10, groundSize),
     mass: 0,
     material: new CUBIC.Material({
         restitution:0
     })
 });
+Spinner.name = 'Spinner'
 Spinner.position.y = 5;
 Spinner.angularVelocity.set(0,0.5,0)
 add(Spinner, true);
 
 
 
-for(let i = 0; i < 10; i++) {
+for(let i = 0; i < 1; i++) {
     const Cube = new CUBIC.Body({
         shapes:new CUBIC.Box(1, 1, 1),
         mass:1,
@@ -60,6 +61,21 @@ for(let i = 0; i < 10; i++) {
     Cube.position.y += 20;
     Cube.position.x += 5;
     add(Cube, true);
+    
+    Cube.addEventListener('collide', (e) => {
+        for(const pos of e.params.info.points) {
+            const size = 0.1;
+            const dot = new THREE.Mesh(
+                new THREE.BoxGeometry(size, size, size),
+                new THREE.MeshBasicMaterial({color:'orange'})
+            );
+            dot.position.copy(pos);
+            setTimeout(() => {
+                scene.remove(dot);
+            },fixedDeltaTime);
+            scene.add(dot);
+        }
+    });
 }
 
 
@@ -108,7 +124,7 @@ function sync() {
 updateRenders();
 
 document.addEventListener("keydown", (e) => {
-    if(e.key == "Space") autoUpdate = !autoUpdate;
+    if(e.key == " ") autoUpdate = !autoUpdate;
     if(e.key == "d")
         updatePhysics(fixedDeltaTime);
     if(e.key == "D") for(let i = 0; i < 10; i++)

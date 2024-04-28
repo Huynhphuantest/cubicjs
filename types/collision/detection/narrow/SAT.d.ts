@@ -13,13 +13,12 @@ export namespace SAT {
      * @property {Vector3} axis
      */
     /**
-     * @param {ConvexPolygon} shapeA
-     * @param {Body} objA
+     * @param {Vector3[]} axes
      * @param {Vector3[]} worldAVertices
      * @param {Vector3[]} worldBVertices
      * @returns {null | seperatingAxisResult}
      */
-    function separatingAxis(shapeA: ConvexPolygon, objA: Body, worldAVertices: Vector3[], worldBVertices: Vector3[]): {
+    function separatingAxis(axes: Vector3[], worldAVertices: Vector3[], worldBVertices: Vector3[]): {
         penetration: number;
         axis: Vector3;
     } | null;
@@ -36,20 +35,20 @@ export namespace SAT {
      */
     function project(vertices: Vector3[], axis: Vector3): Projection;
     /**
-     * @param {ConvexPolygon} shapeA
-     * @param {ConvexPolygon} shapeB
-     * @param {Body} objA
-     * @param {Body} objB
+     * @param {Vector3[]} worldAVertices
+     * @param {Vector3[]} worldBVertices
+     * @param {Vector3[]} axesA
+     * @param {Vector3[]} axesB
      * @returns {Vector3[]}
      */
-    function findContactPoints(shapeA: ConvexPolygon, shapeB: ConvexPolygon, objA: Body, objB: Body): Vector3[];
+    function findContactPoints(worldAVertices: Vector3[], worldBVertices: Vector3[], axesA: Vector3[], axesB: Vector3[]): Vector3[];
     /**
-     * @param {Vector3[]} worldVertices
-     * @param {ConvexPolygon} shape
-     * @param {Body} obj
+     * @param {Vector3[]} worldAVertices
+     * @param {Vector3[]} worldBVertices
+     * @param {Vector3[]} axes
      * @returns {Vector3[]}
      */
-    function filterVerticesIntersectingShape(worldVertices: Vector3[], shape: ConvexPolygon, obj: Body): Vector3[];
+    function filterVerticesIntersectingShape(worldAVertices: Vector3[], worldBVertices: Vector3[], axes: Vector3[]): Vector3[];
     /**
      * @param {Vector3[]} vertices
      * @returns {Vector3}
