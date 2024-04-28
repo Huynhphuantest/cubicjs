@@ -7,4 +7,4 @@ export class Face {
     vertices: Vector3[];
     normal: Vector3;
 }
-import { Vector3 } from "./Vector3.js";
+import { Vector3 } from './Vector3.js';

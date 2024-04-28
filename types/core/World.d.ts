@@ -7,10 +7,10 @@ export class World {
      * @param {object} config
      * @param {Vector3} [config.gravity] - This define the velocity added each step to all objects in world
      */
-    constructor({ gravity, }: {
+    constructor({ gravity }: {
         gravity?: Vector3 | undefined;
     });
-    /**@constant */
+    /** @constant */
     gravity: Vector3;
     /**
      * @type {Body[]}
@@ -27,5 +27,5 @@ export class World {
     add(body: Body): void;
 }
 export type CollisionResult = import('../collision/detection/narrow/NarrowPhase.js').CollisionResult;
-import { Vector3 } from "../Cubic.js";
-import { Body } from "./Body.js";
+import { Vector3 } from '../Cubic.js';
+import { Body } from './Body.js';

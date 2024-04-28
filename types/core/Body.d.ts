@@ -1,4 +1,4 @@
-export class Body {
+export class Body extends EventDispatcher {
     /**
      * This represents a RigidBody.
      * @constructor
@@ -7,7 +7,7 @@ export class Body {
      * @param {number} [params.mass]
      * @param {Material} [params.material]
      */
-    constructor({ shapes, mass, material, }: {
+    constructor({ shapes, mass, material }: {
         shapes?: Shape | Shape[] | undefined;
         mass?: number | undefined;
         material?: Material | undefined;
@@ -21,23 +21,23 @@ export class Body {
     quaternion: Quaternion;
     angularVelocity: Vector3;
     mass: number;
-    /**@type number */
+    /** @type number */
     invMass: number;
     inertia: Vector3;
     invInertia: Vector3;
-    /**@type {number} */
+    /** @type {number} */
     inertiaScalar: number;
-    /**@type {number} */
+    /** @type {number} */
     invInertiaScalar: number;
-    /**@description Local */
+    /** @description Local */
     AABB: AABB;
-    /**@type {null | Body} */
+    /** @type {null | Body} */
     parrent: null | Body;
-    /**@description World infomation of this body, this should not be changed manually*/
+    /** @description World infomation of this body, this should not be changed manually */
     worldInfo: {
         AABB: AABB;
     };
-    /**@description Previous info of this body, this should not be changed manually */
+    /** @description Previous info of this body, this should not be changed manually */
     previousInfo: {
         position: Vector3;
         quaternion: Quaternion;
@@ -52,10 +52,23 @@ export class Body {
     updateWorldRotationAABB(): void;
     updateAABB(): void;
     updateMass(): void;
+    /**
+     * @param {number | Vector3} x
+     * @param {number} y
+     * @param {number} z
+     */
+    translate(x: number | Vector3, y: number, z: number): void;
+    /**
+     * @param {number | Vector3} x
+     * @param {number} y
+     * @param {number} z
+     */
+    rotate(x: number | Vector3, y: number, z: number): void;
 }
-import { Shape } from "./Shape.js";
-import { Material } from "../Cubic.js";
-import { Vector3 } from "../Cubic.js";
-import { Quaternion } from "../Cubic.js";
-import { AABB } from "../collision/AABB.js";
-import { World } from "../Cubic.js";
+import { EventDispatcher } from './EventDispatcher.js';
+import { Shape } from './Shape.js';
+import { Material } from '../Cubic.js';
+import { Vector3 } from '../Cubic.js';
+import { Quaternion } from '../Cubic.js';
+import { AABB } from '../collision/AABB.js';
+import { World } from '../Cubic.js';

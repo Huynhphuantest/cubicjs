@@ -18,5 +18,5 @@ export namespace Impulse {
      */
     function applyImpulse(objA: Body, objB: Body, info: CollisionInfo): void;
 }
-import { Body } from "../../Cubic.js";
-import { CollisionInfo } from "../CollisionInfo.js";
+import { Body } from '../../Cubic.js';
+import { CollisionInfo } from '../CollisionInfo.js';

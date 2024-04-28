@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import { Quaternion } from "./Quaternion.js";
+import { Quaternion } from './Quaternion.js';
 
 export class Vector3 {
 	/**
@@ -8,21 +8,22 @@ export class Vector3 {
      * @param {number} [y]
      * @param {number} [z]
      */
-	constructor(x, y, z) {
-		/**@readonly */
+	constructor (x, y, z) {
+		/** @readonly */
 		this.isVector = true;
 		this.x = x ?? 0;
 		this.y = y ?? 0;
 		this.z = z ?? 0;
 	}
+
 	/**
-     * @param {number|Vector3} x 
+     * @param {number|Vector3} x
      * @param {number} [y]
      * @param {number} [z]
      * @returns {this}
      */
-	add(x, y, z) {
-		if(x instanceof Object) {
+	add (x, y, z) {
+		if (x instanceof Object) {
 			this.x += x.x;
 			this.y += x.y;
 			this.z += x.z;
@@ -33,14 +34,15 @@ export class Vector3 {
 		}
 		return this;
 	}
+
 	/**
      * @param {number|Vector3} x
      * @param {number} [y]
      * @param {number} [z]
      * @returns {this}
      */
-	sub(x, y, z) {
-		if(x instanceof Object) {
+	sub (x, y, z) {
+		if (x instanceof Object) {
 			this.x -= x.x;
 			this.y -= x.y;
 			this.z -= x.z;
@@ -51,18 +53,19 @@ export class Vector3 {
 		}
 		return this;
 	}
+
 	/**
-     * @param {number|Vector3} x 
+     * @param {number|Vector3} x
      * @param {number} [y]
      * @param {number} [z]
      * @returns {this}
      */
-	mul(x, y, z) {
-		if(x instanceof Object) {
+	mul (x, y, z) {
+		if (x instanceof Object) {
 			this.x *= x.x;
 			this.y *= x.y;
 			this.z *= x.z;
-		} else if(y == undefined) {
+		} else if (y == undefined) {
 			this.x *= x;
 			this.y *= x;
 			this.z *= x;
@@ -73,18 +76,19 @@ export class Vector3 {
 		}
 		return this;
 	}
+
 	/**
-     * @param {number|Vector3} x 
+     * @param {number|Vector3} x
      * @param {number} [y]
      * @param {number} [z]
      * @returns {this}
      */
-	div(x, y, z) {
-		if(x instanceof Object) {
+	div (x, y, z) {
+		if (x instanceof Object) {
 			this.x /= x.x;
 			this.y /= x.y;
 			this.z /= x.z;
-		} else if(y == undefined) {
+		} else if (y == undefined) {
 			this.x /= x;
 			this.y /= x;
 			this.z /= x;
@@ -95,20 +99,21 @@ export class Vector3 {
 		}
 		return this;
 	}
+
 	/**
-     * @param {number|Vector3} x 
+     * @param {number|Vector3} x
      * @param {number} [y]
      * @param {number} [z]
      * @returns {Vector3}
      */
-	added(x, y, z) {
-		if(x instanceof Object) {
+	added (x, y, z) {
+		if (x instanceof Object) {
 			return new Vector3(
 				this.x + x.x,
 				this.y + x.y,
 				this.z + x.z
 			);
-		} else if(y == undefined) {
+		} else if (y == undefined) {
 			return new Vector3(
 				this.x + x,
 				this.y + x,
@@ -122,20 +127,21 @@ export class Vector3 {
 			);
 		}
 	}
+
 	/**
-     * @param {number|Vector3} x 
+     * @param {number|Vector3} x
      * @param {number} [y]
      * @param {number} [z]
      * @returns {Vector3}
      */
-	subed(x, y, z) {
-		if(x instanceof Object) {
+	subed (x, y, z) {
+		if (x instanceof Object) {
 			return new Vector3(
 				this.x - x.x,
 				this.y - x.y,
 				this.z - x.z
 			);
-		} else if(y == undefined) {
+		} else if (y == undefined) {
 			return new Vector3(
 				this.x - x,
 				this.y - x,
@@ -149,20 +155,21 @@ export class Vector3 {
 			);
 		}
 	}
+
 	/**
-     * @param {number|Vector3} x 
+     * @param {number|Vector3} x
      * @param {number} [y]
      * @param {number} [z]
      * @returns {Vector3}
      */
-	muled(x, y, z) {
-		if(x instanceof Object) {
+	muled (x, y, z) {
+		if (x instanceof Object) {
 			return new Vector3(
 				this.x * x.x,
 				this.y * x.y,
 				this.z * x.z
 			);
-		} else if(y == undefined) {
+		} else if (y == undefined) {
 			return new Vector3(
 				this.x * x,
 				this.y * x,
@@ -176,20 +183,21 @@ export class Vector3 {
 			);
 		}
 	}
+
 	/**
-     * @param {number|Vector3} x 
+     * @param {number|Vector3} x
      * @param {number} [y]
      * @param {number} [z]
      * @returns {Vector3}
      */
-	dived(x, y, z) {
-		if(x instanceof Object) {
+	dived (x, y, z) {
+		if (x instanceof Object) {
 			return new Vector3(
 				this.x / x.x,
 				this.y / x.y,
 				this.z / x.z
 			);
-		} else if(y == undefined) {
+		} else if (y == undefined) {
 			return new Vector3(
 				this.x / x,
 				this.y / x,
@@ -203,102 +211,113 @@ export class Vector3 {
 			);
 		}
 	}
-	negate() {
+
+	negate () {
 		this.x = -this.x;
 		this.y = -this.y;
 		this.z = -this.z;
 		return this;
 	}
-	negated() {
+
+	negated () {
 		return new Vector3(
 			-this.x,
 			-this.y,
 			-this.z
 		);
 	}
+
 	/**
      * Faster
-     * @param {number} x 
+     * @param {number} x
      * @returns {this}
      */
-	mulScalar(x) {
+	mulScalar (x) {
 		this.x *= x;
 		this.y *= x;
 		this.z *= x;
 		return this;
 	}
+
 	/**
      * Faster
-     * @param {number} x 
+     * @param {number} x
      * @returns {Vector3}
      */
-	muledScalar(x) {
+	muledScalar (x) {
 		return new Vector3(
 			this.x * x,
 			this.y * x,
 			this.z * x
 		);
 	}
+
 	/**
      * Faster
-     * @param {number} x 
+     * @param {number} x
      * @returns {this}
      */
-	divScalar(x) {
+	divScalar (x) {
 		this.x /= x;
 		this.y /= x;
 		this.z /= x;
 		return this;
 	}
+
 	/**
-	 * @param {Vector3} target 
+	 * @param {Vector3} target
 	 * @param {number} t
-	 * @returns 
+	 * @returns
 	 */
-	lerp(target, t) {
+	lerp (target, t) {
 		const x = this.x + (target.x - this.x) * t;
 		const y = this.y + (target.y - this.y) * t;
 		const z = this.z + (target.z - this.z) * t;
 
 		return new Vector3(x, y, z);
 	}
-	/**@param {Vector3} target */
-	dot(target) {
+
+	/** @param {Vector3} target */
+	dot (target) {
 		return (
 			(this.x * target.x) +
 			(this.y * target.y) +
 			(this.z * target.z)
 		);
 	}
+
 	/**
-     * @param {Vector3} target 
+     * @param {Vector3} target
      * @returns {this}
     */
-	cross(target) {
+	cross (target) {
 		this.x = this.y * target.z - this.z * target.y;
 		this.y = this.z * target.x - this.x * target.z;
 		this.z = this.x * target.y - this.y * target.x;
 		return this;
 	}
+
 	/**
-     * @param {Vector3} target 
+     * @param {Vector3} target
      * @returns {Vector3}
     */
-	crossed(target) {
+	crossed (target) {
 		return new Vector3(
 			this.y * target.z - this.z * target.y,
 			this.z * target.x - this.x * target.z,
 			this.x * target.y - this.y * target.x
 		);
 	}
-	normalize(length = 1) {
+
+	normalize (length = 1) {
 		const l = this.length() * length;
 		this.x /= l;
 		this.y /= l;
 		this.z /= l;
 		return this;
 	}
-	normalized(length = 1) {
+
+	normalized (length = 1) {
 		const l = this.length() * length;
 		return new Vector3(
 			this.x / l,
@@ -306,35 +325,37 @@ export class Vector3 {
 			this.z / l
 		);
 	}
-	length() {
+
+	length () {
 		return Math.sqrt(
 			this.x * this.x +
             this.y * this.y +
             this.z * this.z
 		);
 	}
-	lengthSq() {
+
+	lengthSq () {
 		return (
 			this.x * this.x +
             this.y * this.y +
             this.z * this.z
 		);
 	}
+
 	/**
      * @param {Quaternion} target
      * @returns {this}
      */
-	applyQuaternion(target) {
-
+	applyQuaternion (target) {
 		// quaternion q is assumed to have unit length
 
-		const vx = this.x, vy = this.y, vz = this.z;
-		const qx = target.x, qy = target.y, qz = target.z, qw = target.w;
+		const vx = this.x; const vy = this.y; const vz = this.z;
+		const qx = target.x; const qy = target.y; const qz = target.z; const qw = target.w;
 
 		// t = 2 * cross( q.xyz, v );
-		const tx = 2 * ( qy * vz - qz * vy );
-		const ty = 2 * ( qz * vx - qx * vz );
-		const tz = 2 * ( qx * vy - qy * vx );
+		const tx = 2 * (qy * vz - qz * vy);
+		const ty = 2 * (qz * vx - qx * vz);
+		const tz = 2 * (qx * vy - qy * vx);
 
 		// v + q.w * t + cross( q.xyz, t );
 		this.x = vx + qw * tx + qy * tz - qz * ty;
@@ -343,55 +364,60 @@ export class Vector3 {
 
 		return this;
 	}
-	
-	/**@param {Vector3} target */
-	distanceTo(target) {
+
+	/** @param {Vector3} target */
+	distanceTo (target) {
 		return Math.sqrt(
-			((target.x - this.x)*(target.x - this.x)) +
-            ((target.y - this.y)*(target.y - this.y)) +
-            ((target.z - this.z)*(target.z - this.z))
+			((target.x - this.x) * (target.x - this.x)) +
+            ((target.y - this.y) * (target.y - this.y)) +
+            ((target.z - this.z) * (target.z - this.z))
 		);
 	}
-	/**@param {Vector3} target */
-	distanceToSq(target) {
+
+	/** @param {Vector3} target */
+	distanceToSq (target) {
 		return (
-			((target.x - this.x)*(target.x - this.x)) +
-            ((target.y - this.y)*(target.y - this.y)) +
-            ((target.z - this.z)*(target.z - this.z))
+			((target.x - this.x) * (target.x - this.x)) +
+            ((target.y - this.y) * (target.y - this.y)) +
+            ((target.z - this.z) * (target.z - this.z))
 		);
 	}
-	toArray() {
-		return [this.x,this.y,this.z];
+
+	toArray () {
+		return [this.x, this.y, this.z];
 	}
-	clone() {
+
+	clone () {
 		return new Vector3(this.x, this.y, this.z);
 	}
+
 	/**
-     * @param {*} target 
+     * @param {*} target
      * @returns {this}
      */
-	copy(target) {
+	copy (target) {
 		this.x = target.x;
 		this.y = target.y;
 		this.z = target.z;
 		return this;
 	}
+
 	/**
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
      */
-	set(x, y, z) {
+	set (x, y, z) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 
 	/**
-	 * @param {Vector3} target 
+	 * @param {Vector3} target
 	 * @returns {boolean}
 	 */
-	equals(target) {
+	equals (target) {
 		return (
 			this.x === target.x &&
 			this.y === target.y &&
@@ -402,7 +428,7 @@ export class Vector3 {
 	/**
 	 * @returns {boolean}
 	 */
-	isZero() {
+	isZero () {
 		return (
 			this.x === 0 &&
 			this.y === 0 &&

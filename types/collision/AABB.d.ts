@@ -25,4 +25,4 @@ export class AABB {
      */
     clone(): AABB;
 }
-import { Vector3 } from "../Cubic.js";
+import { Vector3 } from '../Cubic.js';

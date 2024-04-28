@@ -6,7 +6,7 @@ export class Vector3 {
      * @param {number} [z]
      */
     constructor(x?: number | undefined, y?: number | undefined, z?: number | undefined);
-    /**@readonly */
+    /** @readonly */
     readonly isVector: boolean;
     x: number;
     y: number;
@@ -93,7 +93,7 @@ export class Vector3 {
      * @returns
      */
     lerp(target: Vector3, t: number): Vector3;
-    /**@param {Vector3} target */
+    /** @param {Vector3} target */
     dot(target: Vector3): number;
     /**
      * @param {Vector3} target
@@ -114,9 +114,9 @@ export class Vector3 {
      * @returns {this}
      */
     applyQuaternion(target: Quaternion): this;
-    /**@param {Vector3} target */
+    /** @param {Vector3} target */
     distanceTo(target: Vector3): number;
-    /**@param {Vector3} target */
+    /** @param {Vector3} target */
     distanceToSq(target: Vector3): number;
     toArray(): number[];
     clone(): Vector3;
@@ -141,4 +141,4 @@ export class Vector3 {
      */
     isZero(): boolean;
 }
-import { Quaternion } from "./Quaternion.js";
+import { Quaternion } from './Quaternion.js';

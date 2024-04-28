@@ -10,4 +10,4 @@ export class Sphere extends Shape {
     radius: number;
     boundingSphereRadius: number | undefined;
 }
-import { Shape } from "../core/Shape.js";
+import { Shape } from '../core/Shape.js';

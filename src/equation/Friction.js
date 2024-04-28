@@ -1,9 +1,10 @@
 class FrictionEquation {
-	constructor() {
+	constructor () {
 
 	}
-	apply() {
-        
+
+	apply () {
+
 	}
 }
 

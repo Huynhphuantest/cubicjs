@@ -2,7 +2,7 @@
  * @abstract
  */
 class Equation {
-	apply() {
+	apply () {
 
 	}
 }

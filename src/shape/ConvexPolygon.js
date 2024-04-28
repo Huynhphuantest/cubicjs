@@ -1,8 +1,8 @@
-import { Vector3 } from "../Cubic.js";
-import { Shape, ShapeType } from "../core/Shape.js";
-import { AABB } from "../collision/AABB.js";
+import { Vector3 } from '../Cubic.js';
+import { Shape, ShapeType } from '../core/Shape.js';
+import { AABB } from '../collision/AABB.js';
 // eslint-disable-next-line no-unused-vars
-import { Face } from "../math/Face.js";
+import { Face } from '../math/Face.js';
 
 export class ConvexPolygon extends Shape {
 	/**
@@ -13,13 +13,13 @@ export class ConvexPolygon extends Shape {
      * @param {Face[]} params.faces
      * @param {Vector3[]} params.axes
      */
-	constructor({
+	constructor ({
 		type = ShapeType.ConvexPolygon,
 		vertices,
 		faces,
-		axes,
+		axes
 	}) {
-		super({type});
+		super({ type });
 		this.type = type;
 		this.vertices = vertices;
 		this.faces = faces;
@@ -33,17 +33,17 @@ export class ConvexPolygon extends Shape {
      * NOTE: This is an memoized function
      * @returns {Vector3}
      */
-	getFurthestVertex() {
+	getFurthestVertex () {
 		let furthestVertex;
 		let furthestDistance = -Infinity;
-		for(const vertex of this.vertices) {
+		for (const vertex of this.vertices) {
 			const distance = vertex.length();
-			if(distance > furthestDistance) {
+			if (distance > furthestDistance) {
 				furthestDistance = distance;
 				furthestVertex = vertex;
 			}
 		}
-		if(furthestVertex === undefined) throw new Error("This ConvexPolygons does not contain any vertex");
+		if (furthestVertex === undefined) throw new Error('This ConvexPolygons does not contain any vertex');
 		return furthestVertex.clone();
 	}
 
@@ -51,17 +51,17 @@ export class ConvexPolygon extends Shape {
      * NOTE: This is an memoized function
      * @returns {Vector3}
      */
-	getNearestVertex() {
+	getNearestVertex () {
 		let nearestVertex;
 		let nearestDistance = Infinity;
-		for(const vertex of this.vertices) {
+		for (const vertex of this.vertices) {
 			const distance = vertex.length();
-			if(distance < nearestDistance) {
+			if (distance < nearestDistance) {
 				nearestDistance = distance;
 				nearestVertex = vertex;
 			}
 		}
-		if(nearestVertex === undefined) throw new Error("This ConvexPolygons does not contain any vertex");
+		if (nearestVertex === undefined) throw new Error('This ConvexPolygons does not contain any vertex');
 		return nearestVertex.clone();
 	}
 
@@ -70,39 +70,41 @@ export class ConvexPolygon extends Shape {
      * @param {Vector3} direction
      * @returns {Vector3}
      */
-	getFurthestVertexInDirection(direction) {
+	getFurthestVertexInDirection (direction) {
 		let furthestVertex;
 		let furthestDistance = -Infinity;
-		for(const vertex of this.vertices) {
+		for (const vertex of this.vertices) {
 			const distance = vertex.dot(direction);
 			if (distance > furthestDistance) {
 				furthestDistance = distance;
 				furthestVertex = vertex;
 			}
 		}
-		if(furthestVertex === undefined) throw new Error("This ConvexPolygon does not contain any vertex");
+		if (furthestVertex === undefined) throw new Error('This ConvexPolygon does not contain any vertex');
 		return furthestVertex.clone();
 	}
-	updateBoundingSphereRadius() {
+
+	updateBoundingSphereRadius () {
 		this.boundingSphereRadius = this.getFurthestVertex().length();
 	}
-	updateAABB() {
+
+	updateAABB () {
 		let
-			minX = Infinity,
-			minY = Infinity,
-			minZ = Infinity,
-			maxX = -Infinity,
-			maxY = -Infinity,
-			maxZ = -Infinity;
-		for(const vertex of this.vertices) {
-			if(vertex.x < minX) minX = vertex.x;
-			else if(vertex.x > maxX) maxX = vertex.x;
+			minX = Infinity;
+		let minY = Infinity;
+		let minZ = Infinity;
+		let maxX = -Infinity;
+		let maxY = -Infinity;
+		let maxZ = -Infinity;
+		for (const vertex of this.vertices) {
+			if (vertex.x < minX) minX = vertex.x;
+			else if (vertex.x > maxX) maxX = vertex.x;
 
-			if(vertex.y < minY) minY = vertex.y;
-			else if(vertex.y > maxY) maxY = vertex.y;
+			if (vertex.y < minY) minY = vertex.y;
+			else if (vertex.y > maxY) maxY = vertex.y;
 
-			if(vertex.z < minZ) minZ = vertex.z;
-			else if(vertex.z > maxZ) maxZ = vertex.z;
+			if (vertex.z < minZ) minZ = vertex.z;
+			else if (vertex.z > maxZ) maxZ = vertex.z;
 		}
 
 		this.AABB = new AABB(

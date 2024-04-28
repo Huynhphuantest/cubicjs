@@ -31,6 +31,6 @@ export type polytopeFace = {
     b: Vector3;
     point: Vector3;
 };
-import { ConvexPolygon } from "../../../shape/ConvexPolygon.js";
-import { Body } from "../../../Cubic.js";
-import { Vector3 } from "../../../Cubic.js";
+import { ConvexPolygon } from '../../../shape/ConvexPolygon.js';
+import { Body } from '../../../Cubic.js';
+import { Vector3 } from '../../../Cubic.js';
