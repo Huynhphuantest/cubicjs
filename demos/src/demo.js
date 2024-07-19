@@ -13,54 +13,27 @@ const objects = [];
 const { animate, scene } = init();
 
 const world = new CUBIC.World({
-    gravity: new Vector3(0, -9.18, 0)
+    gravity: new Vector3(0, -0.91, 0)
 });
 
 
-const groundSize = 50;
+const groundSize = 10;
 const Ground = new CUBIC.Body({
-    shapes: new CUBIC.Box(groundSize,1,groundSize),
+    shape: new CUBIC.Box(groundSize,1,groundSize),
     mass: 0,
     material: new CUBIC.Material({
         restitution:0.9
     })
 });
 add(Ground);
-//Ground.position.set(groundSize/2, 0, groundSize/2);
 
-
-const Spinner = new CUBIC.Body({
-    shapes: new CUBIC.Box(1, 10, groundSize),
-    mass: 0,
-    material: new CUBIC.Material({
-        restitution:0
-    })
+const sphere = new CUBIC.Body({
+    shape: new CUBIC.Sphere(1),
+    mass:100
 });
-Spinner.position.y = 5;
-Spinner.angularVelocity.set(0,0.5,0)
-add(Spinner, true);
 
-
-
-for(let i = 0; i < 10; i++) {
-    const Cube = new CUBIC.Body({
-        shapes:new CUBIC.Box(1, 1, 1),
-        mass:1,
-        material: new CUBIC.Material({
-            restitution:0
-        })
-    });
-    /*Cube.angularVelocity.set(1,1,1);
-    Cube.angularVelocity.mulScalar(Math.random());
-    Cube.angularVelocity.sub(
-        0.5,
-        0.5,
-        0.5
-    );*/
-    Cube.position.y += 20;
-    Cube.position.x += 5;
-    add(Cube, true);
-}
+add(sphere);
+sphere.position.set(0,1.5,0)
 
 
 
@@ -75,6 +48,9 @@ function updateRenders() {
 function updatePhysics(time) {
     world.step(time);
     sync();
+    const vec = sphere.velocity.clone();
+    vec.add(vec.normalized(sphere.shapes[0].parameters.radius));
+    console.plot.vector(vec, sphere.position, 1/15*1000);
 }
 function sync() {
     for(const sync of objects) {
@@ -93,8 +69,13 @@ function sync() {
             body.position.z < -groundSize / 2 ||
             body.position.y < -20
         ) {
-            body.position.set(5,5,5);
-            body.position.mulScalar(Math.random() * groundSize);
+            if(true) return;
+            body.position.set(
+                Math.random(),
+                Math.random(),
+                Math.random()
+            );
+            body.position.mulScalar(groundSize);
             body.position.sub(
                 groundSize/2,
                 groundSize/2,
@@ -108,7 +89,7 @@ function sync() {
 updateRenders();
 
 document.addEventListener("keydown", (e) => {
-    if(e.key == "Space") autoUpdate = !autoUpdate;
+    if(e.key == " ") autoUpdate = !autoUpdate;
     if(e.key == "d")
         updatePhysics(fixedDeltaTime);
     if(e.key == "D") for(let i = 0; i < 10; i++)
@@ -117,13 +98,11 @@ document.addEventListener("keydown", (e) => {
 
 function add(body, randomColor = false) {
     const object = new MeshBuilder(scene);
-    for(const shape of body.shapes) {
-        const geometry = cubicShapeAdaptor(shape);
-        if(randomColor) geometry.material = new THREE.MeshStandardMaterial({
-            color: Math.round(Math.random() * 255 * 255 * 255)
-        });
-        object.addShape(geometry);
-    }
+    const geometry = cubicShapeAdaptor(body.shapes);
+    if(randomColor) geometry.material = new THREE.MeshStandardMaterial({
+        color: Math.round(Math.random() * 255 * 255 * 255)
+    });
+    object.addShape(geometry);
     object.setPosition(body.position.x, body.position.y, body.position.z);
     
     objects.push({

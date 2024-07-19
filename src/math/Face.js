@@ -2,10 +2,12 @@ import { Vector3 } from './Vector3.js';
 export class Face {
 	/**
 	 * @param {Vector3[]} vertices
+	 * @param {number[]} indices
 	 * @param {Vector3} [normal]
 	 */
-	constructor (vertices, normal) {
+	constructor (vertices, indices, normal) {
 		this.vertices = vertices;
+		this.indices = indices;
 		this.normal = normal !== undefined
 			? normal
 			: computeNormal(vertices);

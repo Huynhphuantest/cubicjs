@@ -16,8 +16,8 @@ export * from './math/Face.js';
 
 
 
-export * from './core/Shape.js';
+export * from './shape/Shape.js';
 export * from './core/World.js';
 export * from './core/Material.js';
 
-export * from './core/Body.js';
+export * from './objects/Body.js';

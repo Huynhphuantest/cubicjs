@@ -47,8 +47,8 @@ export const SAT = {
 			v.clone()
 				.applyQuaternion(objB.quaternion)
 		);
-		const resultA = this.separatingAxis(a, objA, worldAAxes, worldAVertices, worldBVertices);
-		const resultB = this.separatingAxis(b, objB, worldBAxes, worldBVertices, worldAVertices);
+		const resultA = this.separatingAxis(worldAAxes, worldAVertices, worldBVertices);
+		const resultB = this.separatingAxis(worldBAxes, worldBVertices, worldAVertices);
 		if (resultA !== null && resultB !== null) {
 			let result;
 			if (resultA.penetration < resultB.penetration) { result = resultA; } else { result = resultB; }
@@ -56,7 +56,7 @@ export const SAT = {
 			return {
 				info: new CollisionInfo({
 					normal: result.axis,
-					points: this.findContactPoints(worldAVertices, worldBVertices, worldAAxes, worldBAxes, objA, objB),
+					points: this.findContactPoints(worldAVertices, worldBVertices, worldAAxes, worldBAxes),
 					penetration: result.penetration
 				})
 			};
@@ -71,14 +71,12 @@ export const SAT = {
      * @property {Vector3} axis
      */
 	/**
-     * @param {ConvexPolygon} shapeA
-     * @param {Body} objA
 	 * @param {Vector3[]} axes
      * @param {Vector3[]} worldAVertices
      * @param {Vector3[]} worldBVertices
      * @returns {null | seperatingAxisResult}
      */
-	separatingAxis (shapeA, objA, axes, worldAVertices, worldBVertices) {
+	separatingAxis (axes, worldAVertices, worldBVertices) {
 		let minDepth = Infinity;
 		const axisFound = new Vector3();
 		for (const axis of axes) {
@@ -144,11 +142,9 @@ export const SAT = {
      * @param {Vector3[]} worldBVertices
 	 * @param {Vector3[]} axesA
 	 * @param {Vector3[]} axesB
-     * @param {Body} objA
-     * @param {Body} objB
      * @returns {Vector3[]}
      */
-	findContactPoints (worldAVertices, worldBVertices, axesA, axesB, objA, objB) {
+	findContactPoints (worldAVertices, worldBVertices, axesA, axesB) {
 		/** @type {Vector3[]} */
 		const contactPoints = [];
 

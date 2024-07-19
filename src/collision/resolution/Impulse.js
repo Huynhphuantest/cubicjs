@@ -35,49 +35,49 @@ export const Impulse = {
      */
 	applyImpulse (objA, objB, info) {
 		/**
-		 * @typedef Contact
+		 * @typedef Constraint
 		 * @property {number} impulse
 		 * @property {Vector3} normal
 		 * @property {Vector3} ra
 		 * @property {Vector3} rb
 		 */
-		/** @type {Contact[]} */
-		const contacts = [];
+		/** @type {Constraint[]} */
+		const constraints = [];
 		for (const contact of info.points) {
 			const N = info.normal;
-
-			const
-				ra = contact.subed(objA.position);
+			const ra = contact.subed(objA.position);
 			const rb = contact.subed(objB.position);
-			const unitVec = new Vector3(0, 0, 1);
-			const raPerp = ra.crossed(unitVec);
-			const rbPerp = rb.crossed(unitVec);
-			if (raPerp.lengthSq() === 0) raPerp.set(0, 0, 1);
-			if (rbPerp.lengthSq() === 0) rbPerp.set(0, 0, 1);
 
 			const e = objA.material.restitution * objB.material.restitution;
 
-			const Vr =
-				objA.velocity.added(raPerp.muled(objA.angularVelocity))
-				  .sub(
-				    objB.velocity.added(rbPerp.muled(objB.angularVelocity))
-				  );
+			const Va = objA.velocity.added(
+				objA.angularVelocity.crossed(ra)
+			);
+			const Vb = objB.velocity.added(
+				objB.angularVelocity.crossed(rb)
+			);
 
+			const Vr = Va.subed(Vb);
+			
 			const contactMag = Vr.dot(N);
-			// Collision already resolved
-			// if(contactMag >= 0) continue;
-			// Total velocity of collision (j is the impulse)
+
 			const Vj = contactMag * (-(1 + e));
 
-			const raPerpDotN = raPerp.dot(N);
-			const rbPerpDotN = rbPerp.dot(N);
+			const thetaA = ra.
+				crossed(N).
+				crossed(ra).
+				mulScalar(objA.invInertiaScalar);
+			const thetaB = rb.
+				crossed(N).
+				crossed(rb).
+				mulScalar(objB.invInertiaScalar);
 
 			const denom =
 				(objA.invMass + objB.invMass) +
-				(raPerpDotN * raPerpDotN) * objA.invInertiaScalar +
-				(rbPerpDotN * rbPerpDotN) * objB.invInertiaScalar;
+				(thetaA.add(thetaB).dot(N));
 			const j = Vj / denom;
-			contacts.push({
+
+			constraints.push({
 				impulse: j / info.points.length,
 				normal: N,
 				ra,
@@ -85,32 +85,10 @@ export const Impulse = {
 			});
 		}
 
-		for (const contact of contacts) {
-			if (objA.mass !== 0) {
-				objA.velocity.add(
-					contact.normal.muledScalar(
-						objA.invMass * contact.impulse
-					)
-				);
-				objA.angularVelocity.add(
-					contact.ra.crossed(contact.normal.muledScalar(contact.impulse)).mulScalar(
-						objA.invInertiaScalar
-					)
-				);
-			}
-
-			if (objB.mass !== 0) {
-				objB.velocity.sub(
-					contact.normal.muledScalar(
-						objB.invMass * contact.impulse
-					)
-				);
-				objB.angularVelocity.sub(
-					contact.rb.crossed(contact.normal.muledScalar(contact.impulse)).mulScalar(
-						objB.invInertiaScalar
-					)
-				);
-			}
+		for (const constraint of constraints) {
+			const impulse = constraint.normal.muled(constraint.impulse);
+			objA.applyImpulse(impulse, constraint.ra);
+			objB.applyImpulse(impulse.negated(), constraint.rb);
 		}
 	}
 };

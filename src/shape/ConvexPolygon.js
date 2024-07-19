@@ -1,23 +1,26 @@
 import { Vector3 } from '../Cubic.js';
-import { Shape, ShapeType } from '../core/Shape.js';
+import { Shape, ShapeType } from './Shape.js';
 import { AABB } from '../collision/AABB.js';
 // eslint-disable-next-line no-unused-vars
 import { Face } from '../math/Face.js';
+import { Edge } from '../math/Edge.js';
 
 export class ConvexPolygon extends Shape {
 	/**
      * @constructor
      * @param {object} params
+	 * @param {Vector3[]} params.vertices
+	 * @param {Face[]} params.faces
+	 * @param {Vector3[]} params.axes
+	 * @param {Edge[]} [params.edges]
      * @param {number} [params.type]
-     * @param {Vector3[]} params.vertices
-     * @param {Face[]} params.faces
-     * @param {Vector3[]} params.axes
      */
 	constructor ({
 		type = ShapeType.ConvexPolygon,
 		vertices,
 		faces,
-		axes
+		axes,
+		edges
 	}) {
 		super({ type });
 		this.type = type;
@@ -25,6 +28,8 @@ export class ConvexPolygon extends Shape {
 		this.faces = faces;
 		this.axes = axes;
 		this.needVerticesUpdate = false;
+		this.edges = edges ? 
+			edges : computeEdges(vertices);
 	}
 
 	//     ULITIES
@@ -37,7 +42,8 @@ export class ConvexPolygon extends Shape {
 		let furthestVertex;
 		let furthestDistance = -Infinity;
 		for (const vertex of this.vertices) {
-			const distance = vertex.length();
+			// A^2 > B^2 <=> A > B
+			const distance = vertex.lengthSq();
 			if (distance > furthestDistance) {
 				furthestDistance = distance;
 				furthestVertex = vertex;
@@ -55,7 +61,8 @@ export class ConvexPolygon extends Shape {
 		let nearestVertex;
 		let nearestDistance = Infinity;
 		for (const vertex of this.vertices) {
-			const distance = vertex.length();
+			const distance = vertex.lengthSq();
+			// A^2 < B^2 <=> A < B
 			if (distance < nearestDistance) {
 				nearestDistance = distance;
 				nearestVertex = vertex;
@@ -112,4 +119,12 @@ export class ConvexPolygon extends Shape {
 			new Vector3(maxX, maxY, maxZ)
 		);
 	}
+}
+
+/**
+ * @param {Vector3[]} vertices 
+ * @returns {Edge[]}
+ */
+function computeEdges(vertices) {
+	return [];
 }

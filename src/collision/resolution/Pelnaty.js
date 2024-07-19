@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import { Body } from '../../Cubic.js';
 // eslint-disable-next-line no-unused-vars
-import { Shape } from '../../core/Shape.js';
+import { Shape } from '../../shape/Shape.js';
 // eslint-disable-next-line no-unused-vars
 import { ConvexPolygon } from '../../shape/ConvexPolygon.js';
 // eslint-disable-next-line no-unused-vars

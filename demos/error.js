@@ -1,6 +1,9 @@
-import { log } from "./src/utils/render.ts";
+import { log, plotPoint, plotVector } from "./src/utils/render.ts";
 
 console.log = log;
+console.plot = {};
+console.plot.point = plotPoint;
+console.plot.vector = plotVector;
 
 window.onerror = (event, file, line, col) => {
     const err = new Error();

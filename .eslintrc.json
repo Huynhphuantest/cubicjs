@@ -15,11 +15,7 @@
         "no-console": "warn",
         "no-var": "warn",
         "no-unused-vars": "warn",
-        "semi": "error",
-        "indent": [
-            "warn",
-            "tab"
-        ]
+        "semi": "error"
     },
     "ignorePatterns":[
         "build/*",

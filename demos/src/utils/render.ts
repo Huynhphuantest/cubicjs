@@ -50,6 +50,7 @@ function animate() {
 
     if(renderProfilerDOM !== null)
         renderProfilerDOM.innerHTML = `RenderTime: ${(performance.now() - renderStartTime).toFixed(2)}ms`;
+    removeAllObjectsLastFrame();
 }
 
 let logger:HTMLUListElement;
@@ -307,4 +308,23 @@ function initLog() {
     chToPx = sizeDOM.getBoundingClientRect().width;
 
     logger.removeChild(sizeDOM);
+}
+function removeAllObjectsLastFrame() {
+    scene.remove(...objects);
+    objects.length = 0;
+}
+const objects:THREE.Object3D[] = [];
+export function plotPoint(position = new THREE.Vector3(), size = 0.1) {
+    const point = new THREE.Mesh(
+        new THREE.SphereGeometry(size),
+        new THREE.MeshStandardMaterial({color:'orange'})
+    );
+    scene.add(point);
+    point.position.copy(position);
+    objects.push(point);
+}
+export function plotVector(vector = new THREE.Vector3(1,0,0), position = new THREE.Vector3()) {
+    const arrow = new THREE.ArrowHelper(vector, position, vector.length(), 'orange');
+    scene.add(arrow);
+    objects.push(arrow);
 }

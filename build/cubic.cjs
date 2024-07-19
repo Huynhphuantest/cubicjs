@@ -117,9 +117,9 @@ class Shape {
 		throw new Error('Not implemented');
 	}
 	/**
+	 * @abstract
 	 * @param {number} mass
 	 * @returns {Vector3}
-	 * @abstract
 	 */
 	// eslint-disable-next-line
 	calculateInertia(mass) {
@@ -1281,49 +1281,36 @@ const Impulse = {
      */
 	applyImpulse (objA, objB, info) {
 		/**
-		 * @typedef Contact
+		 * @typedef Constraint
 		 * @property {number} impulse
 		 * @property {Vector3} normal
 		 * @property {Vector3} ra
 		 * @property {Vector3} rb
 		 */
-		/** @type {Contact[]} */
-		const contacts = [];
+		/** @type {Constraint[]} */
+		const constraints = [];
 		for (const contact of info.points) {
 			const N = info.normal;
-
-			const
-				ra = contact.subed(objA.position);
+			const ra = contact.subed(objA.position);
 			const rb = contact.subed(objB.position);
-			const unitVec = new Vector3(0, 0, 1);
-			const raPerp = ra.crossed(unitVec);
-			const rbPerp = rb.crossed(unitVec);
-			if (raPerp.lengthSq() === 0) raPerp.set(0, 0, 1);
-			if (rbPerp.lengthSq() === 0) rbPerp.set(0, 0, 1);
 
 			const e = objA.material.restitution * objB.material.restitution;
 
 			const Vr =
-				objA.velocity.added(raPerp.muled(objA.angularVelocity))
-				  .sub(
-				    objB.velocity.added(rbPerp.muled(objB.angularVelocity))
-				  );
+				(
+					objA.velocity
+				).sub(
+				    objB.velocity
+				);
 
 			const contactMag = Vr.dot(N);
-			// Collision already resolved
 			// if(contactMag >= 0) continue;
-			// Total velocity of collision (j is the impulse)
+
 			const Vj = contactMag * (-(1 + e));
 
-			const raPerpDotN = raPerp.dot(N);
-			const rbPerpDotN = rbPerp.dot(N);
-
-			const denom =
-				(objA.invMass + objB.invMass) +
-				(raPerpDotN * raPerpDotN) * objA.invInertiaScalar +
-				(rbPerpDotN * rbPerpDotN) * objB.invInertiaScalar;
+			const denom = (objA.invMass + objB.invMass);
 			const j = Vj / denom;
-			contacts.push({
+			constraints.push({
 				impulse: j / info.points.length,
 				normal: N,
 				ra,
@@ -1331,32 +1318,10 @@ const Impulse = {
 			});
 		}
 
-		for (const contact of contacts) {
-			if (objA.mass !== 0) {
-				objA.velocity.add(
-					contact.normal.muledScalar(
-						objA.invMass * contact.impulse
-					)
-				);
-				objA.angularVelocity.add(
-					contact.ra.crossed(contact.normal.muledScalar(contact.impulse)).mulScalar(
-						objA.invInertiaScalar
-					)
-				);
-			}
-
-			if (objB.mass !== 0) {
-				objB.velocity.sub(
-					contact.normal.muledScalar(
-						objB.invMass * contact.impulse
-					)
-				);
-				objB.angularVelocity.sub(
-					contact.rb.crossed(contact.normal.muledScalar(contact.impulse)).mulScalar(
-						objB.invInertiaScalar
-					)
-				);
-			}
+		for (const constraint of constraints) {
+			const impulse = constraint.normal.mul(constraint.impulse);
+			objA.applyImpulse(impulse, constraint.ra);
+			objB.applyImpulse(impulse.negated(), constraint.rb);
 		}
 	}
 };
@@ -1560,17 +1525,17 @@ class Body extends EventDispatcher {
      * This represents a RigidBody.
      * @constructor
      * @param {object} params
-     * @param {Shape[] | Shape} [params.shapes]
+     * @param {Shape} params.shape
      * @param {number} [params.mass]
 	 * @param {Material} [params.material]
      */
 	constructor ({
-		shapes = [],
-		mass = 1,
+		shape,
+		mass = 0,
 		material = new Material({ restitution: 0.1 })
 	}) {
 		super();
-		this.shapes = shapes instanceof Array ? shapes : [shapes];
+		this.shape = shape;
 		this.type = BodyType.DYNAMIC;
 
 		this.name = 'UnamedObject';
@@ -1587,7 +1552,8 @@ class Body extends EventDispatcher {
 		this.invMass;
 
 		// TODO: Add a case where shapes.length is greater than 0
-		this.inertia = this.shapes[0].calculateInertia(this.mass);
+		this.inertia = this.shape.calculateInertia(this.mass);
+
 		this.invInertia = new Vector3();
 		/** @type {number} */
 		this.inertiaScalar;
@@ -1601,9 +1567,8 @@ class Body extends EventDispatcher {
 			new Vector3(),
 			new Vector3()
 		);
-		if (this.shapes.length != 0) {
-			this.updateAABB();
-		}
+		this.updateAABB();
+
 		/** @type {null | Body} */
 		this.parrent = null;
 
@@ -1661,28 +1626,26 @@ class Body extends EventDispatcher {
 	updateWorldRotationAABB () {
 		const lowerBound = new Vector3(Infinity, Infinity, Infinity);
 		const upperBound = new Vector3(-Infinity, -Infinity, -Infinity);
-		for (const shape of this.shapes) {
-			if (shape instanceof ConvexPolygon) {
-				for (const localVertex of shape.vertices) {
-					const vertex = localVertex.clone().applyQuaternion(this.quaternion);
-					if (vertex.x < lowerBound.x) lowerBound.x = vertex.x;
-					if (vertex.y < lowerBound.y) lowerBound.y = vertex.y;
-					if (vertex.z < lowerBound.z) lowerBound.z = vertex.z;
+		if (this.shape instanceof ConvexPolygon) {
+			for (const localVertex of this.shape.vertices) {
+				const vertex = localVertex.clone().applyQuaternion(this.quaternion);
+				if (vertex.x < lowerBound.x) lowerBound.x = vertex.x;
+				if (vertex.y < lowerBound.y) lowerBound.y = vertex.y;
+				if (vertex.z < lowerBound.z) lowerBound.z = vertex.z;
 
-					if (vertex.x > upperBound.x) upperBound.x = vertex.x;
-					if (vertex.y > upperBound.y) upperBound.y = vertex.y;
-					if (vertex.z > upperBound.z) upperBound.z = vertex.z;
-				}
+				if (vertex.x > upperBound.x) upperBound.x = vertex.x;
+				if (vertex.y > upperBound.y) upperBound.y = vertex.y;
+				if (vertex.z > upperBound.z) upperBound.z = vertex.z;
 			}
-			if (shape instanceof Sphere) {
-				if (-shape.radius < lowerBound.x) lowerBound.x = -shape.radius;
-				if (-shape.radius < lowerBound.y) lowerBound.y = -shape.radius;
-				if (-shape.radius < lowerBound.z) lowerBound.z = -shape.radius;
+		}
+		if (this.shape instanceof Sphere) {
+			if (-this.shape.radius < lowerBound.x) lowerBound.x = -this.shape.radius;
+			if (-this.shape.radius < lowerBound.y) lowerBound.y = -this.shape.radius;
+			if (-this.shape.radius < lowerBound.z) lowerBound.z = -this.shape.radius;
 
-				if (shape.radius > upperBound.x) upperBound.x = shape.radius;
-				if (shape.radius > upperBound.y) upperBound.y = shape.radius;
-				if (shape.radius > upperBound.z) upperBound.z = shape.radius;
-			}
+			if (this.shape.radius > upperBound.x) upperBound.x = this.shape.radius;
+			if (this.shape.radius > upperBound.y) upperBound.y = this.shape.radius;
+			if (this.shape.radius > upperBound.z) upperBound.z = this.shape.radius;
 		}
 		this.worldInfo.AABB = new AABB(
 			lowerBound.added(this.position),
@@ -1691,21 +1654,22 @@ class Body extends EventDispatcher {
 	}
 
 	updateAABB () {
-		for (const shape of this.shapes) {
-			this.AABB.extend(shape.AABB);
-		}
+		this.AABB.extend(this.shape.AABB);
 	}
 
 	updateMass () {
-		this.invMass = this.mass == 0 ? 0 : 1 / this.mass;
+		this.invMass = this.mass === 0 ? 0 : 1 / this.mass;
 		const I = this.inertia;
-		this.invInertia.set(
-			I.x > 0 ? 1.0 / I.x : 0,
-			I.y > 0 ? 1.0 / I.y : 0,
-			I.z > 0 ? 1.0 / I.z : 0
+		I.set(0,0,0);
+		const iI = this.invInertia;
+		I.add(this.shape.calculateInertia(this.mass));
+		iI.set(
+			I.x === 0 ? 0 : 1.0 / I.x,
+			I.y === 0 ? 0 : 1.0 / I.y,
+			I.z === 0 ? 0 : 1.0 / I.z
 		);
 		this.inertiaScalar = I.x + I.y + I.z;
-		this.invInertiaScalar = this.inertiaScalar == 0 ? 0 : 1 / this.inertiaScalar;
+		this.invInertiaScalar = iI.x + iI.y + iI.z;
 	}
 
 	/**
@@ -1746,6 +1710,13 @@ class Body extends EventDispatcher {
 				l
 			);
 		}
+	}
+	/**
+	 * @param {Vector3} impulse
+	 * @param {Vector3} relative
+	 */
+	applyImpulse(impulse, relative) {
+		this.velocity.add(impulse.muled(this.invMass));
 	}
 }
 
@@ -1834,8 +1805,16 @@ const SAT = {
 				.applyQuaternion(objB.quaternion)
 				.add(objB.position)
 		);
-		const resultA = this.separatingAxis(a, objA, worldAVertices, worldBVertices);
-		const resultB = this.separatingAxis(b, objB, worldBVertices, worldAVertices);
+		const worldAAxes = a.axes.map(v =>
+			v.clone()
+				.applyQuaternion(objA.quaternion)
+		);
+		const worldBAxes = b.axes.map(v =>
+			v.clone()
+				.applyQuaternion(objB.quaternion)
+		);
+		const resultA = this.separatingAxis(worldAAxes, worldAVertices, worldBVertices);
+		const resultB = this.separatingAxis(worldBAxes, worldBVertices, worldAVertices);
 		if (resultA !== null && resultB !== null) {
 			let result;
 			if (resultA.penetration < resultB.penetration) { result = resultA; } else { result = resultB; }
@@ -1843,9 +1822,7 @@ const SAT = {
 			return {
 				info: new CollisionInfo({
 					normal: result.axis,
-					points: result === resultA
-						? this.findContactPoints(a, b, objA, objB)
-						: this.findContactPoints(b, a, objB, objA),
+					points: this.findContactPoints(worldAVertices, worldBVertices, worldAAxes, worldBAxes),
 					penetration: result.penetration
 				})
 			};
@@ -1860,17 +1837,15 @@ const SAT = {
      * @property {Vector3} axis
      */
 	/**
-     * @param {ConvexPolygon} shapeA
-     * @param {Body} objA
+	 * @param {Vector3[]} axes
      * @param {Vector3[]} worldAVertices
      * @param {Vector3[]} worldBVertices
      * @returns {null | seperatingAxisResult}
      */
-	separatingAxis (shapeA, objA, worldAVertices, worldBVertices) {
+	separatingAxis (axes, worldAVertices, worldBVertices) {
 		let minDepth = Infinity;
 		const axisFound = new Vector3();
-		for (const axisLocal of shapeA.axes) {
-			const axis = axisLocal.clone().applyQuaternion(objA.quaternion);
+		for (const axis of axes) {
 			const { min: minA, max: maxA } = this.project(worldAVertices, axis);
 			const { min: minB, max: maxB } = this.project(worldBVertices, axis);
 
@@ -1929,49 +1904,37 @@ const SAT = {
 	},
 
 	/**
-     * @param {ConvexPolygon} shapeA
-     * @param {ConvexPolygon} shapeB
-     * @param {Body} objA
-     * @param {Body} objB
+     * @param {Vector3[]} worldAVertices
+     * @param {Vector3[]} worldBVertices
+	 * @param {Vector3[]} axesA
+	 * @param {Vector3[]} axesB
      * @returns {Vector3[]}
      */
-	findContactPoints (shapeA, shapeB, objA, objB) {
+	findContactPoints (worldAVertices, worldBVertices, axesA, axesB) {
 		/** @type {Vector3[]} */
 		const contactPoints = [];
 
-		const vertices1 = shapeA.vertices.map(vertex => vertex
-			.clone()
-			.applyQuaternion(objA.quaternion)
-			.add(objA.position)
-		);
-		const vertices2 = shapeB.vertices.map(vertex => vertex
-			.clone()
-			.applyQuaternion(objB.quaternion)
-			.add(objB.position)
-		);
-
-		const allVerticesAOverlapB = this.filterVerticesIntersectingShape(vertices1, shapeB, objB);
+		const allVerticesAOverlapB = this.filterVerticesIntersectingShape(worldAVertices, worldBVertices, axesB);
 		contactPoints.push(...allVerticesAOverlapB);
-		const allVerticesBOverlapA = this.filterVerticesIntersectingShape(vertices2, shapeA, objA);
+		const allVerticesBOverlapA = this.filterVerticesIntersectingShape(worldBVertices, worldAVertices, axesA);
 		contactPoints.push(...allVerticesBOverlapA);
 
 		return contactPoints;
 	},
 
 	/**
-     * @param {Vector3[]} worldVertices
-     * @param {ConvexPolygon} shape
-     * @param {Body} obj
+     * @param {Vector3[]} worldAVertices
+	 * @param {Vector3[]} worldBVertices
+	 * @param {Vector3[]} axes
      * @returns {Vector3[]}
      */
-	filterVerticesIntersectingShape (worldVertices, shape, obj) {
+	filterVerticesIntersectingShape (worldAVertices, worldBVertices, axes) {
 		/** @type {Vector3[]} */
-		let filtered = worldVertices;
-		for (const axisLocal of shape.axes) {
+		let filtered = worldAVertices;
+		for (const axis of axes) {
 			/** @type {Vector3[]} */
 			const filteredInAxis = [];
-			const axis = axisLocal.applyQuaternion(obj.quaternion);
-			const { min, max } = this.project(shape.vertices, axis);
+			const { min, max } = this.project(worldBVertices, axis);
 			for (const vertex of filtered) {
 				const projection = vertex.dot(axis);
 				if (projection > min && projection < max) filteredInAxis.push(vertex);
@@ -2045,123 +2008,7 @@ function projectedPointInPolygon (vertices, point, normal) {
 	return true;
 }
 
-/**
- * @typedef {import('../collision/detection/narrow/NarrowPhase.js').CollisionResult} CollisionResult
- */
-
-class World {
-	/**
-     * @constructor
-     * @param {object} config
-     * @param {Vector3} [config.gravity] - This define the velocity added each step to all objects in world
-     */
-	constructor ({
-		gravity = new Vector3()
-	}) {
-		/** @constant */
-		this.gravity = gravity;
-
-		/**
-         * @type {Body[]}
-         * @constant
-         */
-		this.bodys = [];
-	}
-
-	/**
-     * @param {number} deltaTime
-     */
-	step (deltaTime) {
-		if (deltaTime == 0) return;
-		// If delta time will it reverse time?
-		this.bodys.forEach(body => {
-			body.update(this, deltaTime);
-			body.velocity.add(this.gravity.clone().mulScalar(deltaTime * body.mass));
-		});
-
-		// COLLISION CHECKING
-		//   BROAD PHASE
-		const pairs = SAP.getPotentialCollision(this.bodys);
-
-		//   NARROW PHASE
-		for (const pair of pairs) {
-			// Use SAP again too get potential collision in each Body
-
-			// if(!pair.a.worldInfo.AABB.overlaps(pair.b.worldInfo.AABB)) return;
-			bodyBody(pair.a, pair.b);
-		}
-	}
-
-	/**
-     * @param {Body} body
-     */
-	add (body) {
-		this.bodys.push(body);
-	}
-}
-
-/**
- *
- * @param {Body} objA
- * @param {Body} objB
- */
-function bodyBody (objA, objB) {
-	if (objA.mass === 0 && objB.mass === 0) return;
-	for (const shapeA of objA.shapes) {
-		for (const shapeB of objB.shapes) {
-			/**@type {CollisionInfo | null} */
-			let info = null;
-			let inverse = false;
-			// CONVEX x CONVEX
-			if (
-				shapeA instanceof ConvexPolygon &&
-                shapeB instanceof ConvexPolygon
-			) {
-				info = convexConvex(objA, objB, shapeA, shapeB);
-			}
-
-			// SPHERE x CONVEX
-			else if (
-				shapeA instanceof Sphere &&
-                shapeB instanceof ConvexPolygon
-			) {
-				info = sphereConvex(objA, objB, shapeA, shapeB);
-			}
-			// CONVEX x SPHERE
-			else if (
-				shapeA instanceof ConvexPolygon &&
-                shapeB instanceof Sphere
-			) {
-				inverse = true;
-				info = sphereConvex(objB, objA, shapeB, shapeA);
-			}
-
-			// SPHERE x SPHERE
-			else if (
-				shapeA instanceof Sphere &&
-                shapeB instanceof Sphere
-			) {
-				info = sphereSphere(objA, objB, shapeA, shapeB);
-			}
-
-			if(info !== null) {
-				const collidedEvent = new EventType('collide');
-				if(!inverse) {
-					Impulse.resolve(objA, objB, info);
-				}
-				else {
-					Impulse.resolve(objB, objA, info);
-				}
-				collidedEvent.params.info = info;
-				collidedEvent.params.body = objB;
-				objA.dispatchEvent(collidedEvent);
-				collidedEvent.params.body = objA;
-				objB.dispatchEvent(collidedEvent);
-			}
-		}
-	}
-}
-
+// eslint-disable-next-line no-unused-vars
 /**
 *
 * @param {Body} objA
@@ -2326,6 +2173,123 @@ function sphereSphere (objA, objB, shapeA, shapeB) {
 		});
 	}
 	return null;
+}
+
+/**
+ * @typedef {import('../collision/detection/narrow/NarrowPhase.js').CollisionResult} CollisionResult
+ */
+
+class World {
+	/**
+     * @constructor
+     * @param {object} config
+     * @param {Vector3} [config.gravity] - This define the velocity added each step to all objects in world
+     */
+	constructor ({
+		gravity = new Vector3()
+	}) {
+		/** @constant */
+		this.gravity = gravity;
+
+		/**
+         * @type {Body[]}
+         * @constant
+         */
+		this.bodys = [];
+	}
+
+	/**
+     * @param {number} deltaTime
+     */
+	step (deltaTime) {
+		if (deltaTime == 0) return;
+		// If delta time will it reverse time?
+		this.bodys.forEach(body => {
+			body.update(this, deltaTime);
+			body.velocity.add(this.gravity.clone().mulScalar(deltaTime * body.mass));
+		});
+
+		// COLLISION CHECKING
+		//   BROAD PHASE
+		const pairs = SAP.getPotentialCollision(this.bodys);
+
+		//   NARROW PHASE
+		for (const pair of pairs) {
+			// Use SAP again too get potential collision in each Body
+
+			// if(!pair.a.worldInfo.AABB.overlaps(pair.b.worldInfo.AABB)) return;
+			bodyBody(pair.a, pair.b);
+		}
+	}
+
+	/**
+     * @param {Body} body
+     */
+	add (body) {
+		this.bodys.push(body);
+	}
+}
+
+/**
+ *
+ * @param {Body} objA
+ * @param {Body} objB
+ */
+function bodyBody (objA, objB) {
+	if (objA.mass === 0 && objB.mass === 0) return;
+
+	const shapeA = objA.shape;
+	const shapeB = objB.shape;
+
+	/**@type {CollisionInfo | null} */
+	let info = null;
+	let inverse = false;
+	// CONVEX x CONVEX
+	if (
+		shapeA instanceof ConvexPolygon &&
+		shapeB instanceof ConvexPolygon
+	) {
+		info = convexConvex(objA, objB, shapeA, shapeB);
+	}
+
+	// SPHERE x CONVEX
+	else if (
+		shapeA instanceof Sphere &&
+		shapeB instanceof ConvexPolygon
+	) {
+		info = sphereConvex(objA, objB, shapeA, shapeB);
+	}
+	// CONVEX x SPHERE
+	else if (
+		shapeA instanceof ConvexPolygon &&
+		shapeB instanceof Sphere
+	) {
+		inverse = true;
+		info = sphereConvex(objB, objA, shapeB, shapeA);
+	}
+
+	// SPHERE x SPHERE
+	else if (
+		shapeA instanceof Sphere &&
+		shapeB instanceof Sphere
+	) {
+		info = sphereSphere(objA, objB, shapeA, shapeB);
+	}
+
+	if(info !== null) {
+		const collidedEvent = new EventType('collide');
+		if(!inverse) {
+			Impulse.resolve(objA, objB, info);
+		}
+		else {
+			Impulse.resolve(objB, objA, info);
+		}
+		collidedEvent.params.info = info;
+		collidedEvent.params.body = objB;
+		objA.dispatchEvent(collidedEvent);
+		collidedEvent.params.body = objA;
+		objB.dispatchEvent(collidedEvent);
+	}
 }
 
 /**

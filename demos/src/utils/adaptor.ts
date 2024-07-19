@@ -6,9 +6,9 @@ import type { Shape } from '../../../types/Cubic.d.ts';
 import { Mesh } from 'three';
 
 /**Convert CubicJS Shape Type to ThreeJS Geometry */
-export function cubicShapeAdaptor(shape:Shape):Mesh {
-    const params = shape.parameters;
-    switch(shape.type) {
+export function cubicShapeAdaptor(shapes:Shape[]):Mesh {
+    const params = shapes[0].parameters;
+    switch(shapes[0].type) {
         case ShapeTypeEnum.Box:
             //@ts-ignore
             return ShapeCreator.createBox(params.width, params.height, params.depth);

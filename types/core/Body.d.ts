@@ -3,16 +3,16 @@ export class Body extends EventDispatcher {
      * This represents a RigidBody.
      * @constructor
      * @param {object} params
-     * @param {Shape[] | Shape} [params.shapes]
+     * @param {Shape} params.shape
      * @param {number} [params.mass]
      * @param {Material} [params.material]
      */
-    constructor({ shapes, mass, material }: {
-        shapes?: Shape | Shape[] | undefined;
+    constructor({ shape, mass, material }: {
+        shape: Shape;
         mass?: number | undefined;
         material?: Material | undefined;
     });
-    shapes: Shape[];
+    shape: Shape;
     type: number;
     name: string;
     material: Material;
@@ -64,6 +64,11 @@ export class Body extends EventDispatcher {
      * @param {number} z
      */
     rotate(x: number | Vector3, y: number, z: number): void;
+    /**
+     * @param {Vector3} impulse
+     * @param {Vector3} relative
+     */
+    applyImpulse(impulse: Vector3, relative: Vector3): void;
 }
 import { EventDispatcher } from './EventDispatcher.js';
 import { Shape } from './Shape.js';

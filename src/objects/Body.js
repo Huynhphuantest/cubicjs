@@ -2,15 +2,17 @@
 import { Vector3, World, Quaternion, Material, ConvexPolygon, Sphere, Mat3 } from '../Cubic.js';
 import { AABB } from '../collision/AABB.js';
 // eslint-disable-next-line no-unused-vars
-import { Shape } from './Shape.js';
-import { EventDispatcher } from './EventDispatcher.js';
+import { Shape } from '../shape/Shape.js';
+import { EventDispatcher } from '../core/EventDispatcher.js';
 
 /**
  * @readonly
  * @enum {number}
  */
 const BodyType = {
+	/**@description Dynamic Body can collide with other Dynamic Body and Static Body */
 	DYNAMIC: 0,
+	/**@description Static Body can only collide with Dynamic Body */
 	STATIC: 1
 };
 
@@ -19,17 +21,22 @@ export class Body extends EventDispatcher {
      * This represents a RigidBody.
      * @constructor
      * @param {object} params
-     * @param {Shape[] | Shape} [params.shapes]
+     * @param {Shape} params.shape
      * @param {number} [params.mass]
 	 * @param {Material} [params.material]
      */
 	constructor ({
-		shapes = [],
-		mass = 1,
+		shape,
+		mass = 0,
 		material = new Material({ restitution: 0.1 })
 	}) {
 		super();
-		this.shapes = shapes instanceof Array ? shapes : [shapes];
+		this.shapes = [shape];
+		/**@description Offsets of each shape in Body */
+		this.offsets = [new Vector3()];
+		/**@description Orientations of each shape in Body */
+		this.orientations = [new Quaternion()];
+
 		this.type = BodyType.DYNAMIC;
 
 		this.name = 'UnamedObject';
@@ -46,23 +53,26 @@ export class Body extends EventDispatcher {
 		this.invMass;
 
 		// TODO: Add a case where shapes.length is greater than 0
-		this.inertia = this.shapes[0].calculateInertia(this.mass);
+		this.inertia = new Vector3();
+		this.shapes.forEach(shape => {
+			this.inertia.add(shape.calculateInertia(this.mass));
+		});
+
 		this.invInertia = new Vector3();
 		/** @type {number} */
 		this.inertiaScalar;
 		/** @type {number} */
 		this.invInertiaScalar;
 
-		this.updateMass();
+		this.updateMassProperties();
 
 		/** @description Local */
 		this.AABB = new AABB(
 			new Vector3(),
 			new Vector3()
 		);
-		if (this.shapes.length != 0) {
-			this.updateAABB();
-		}
+		this.updateAABB();
+
 		/** @type {null | Body} */
 		this.parrent = null;
 
@@ -91,9 +101,7 @@ export class Body extends EventDispatcher {
 			this.position.add(this.velocity.muledScalar(deltaTime));
 		}
 		if (!this.angularVelocity.isZero()) {
-			// TODO:
-			const newQuat = new Quaternion().setFromAxisAngle(this.angularVelocity.normalized(), this.angularVelocity.length() * deltaTime);
-			this.quaternion.mulQuaternion(newQuat);
+			this.quaternion.integrate(this.angularVelocity, deltaTime);
 		}
 
 		if (!this.position.equals(this.previousInfo.position)) {
@@ -106,7 +114,7 @@ export class Body extends EventDispatcher {
 		}
 		if (this.mass != this.previousInfo.mass) {
 			this.previousInfo.mass = this.mass;
-			this.updateMass();
+			this.updateMassProperties();
 		}
 	}
 
@@ -120,14 +128,14 @@ export class Body extends EventDispatcher {
 	updateWorldRotationAABB () {
 		const lowerBound = new Vector3(Infinity, Infinity, Infinity);
 		const upperBound = new Vector3(-Infinity, -Infinity, -Infinity);
-		for (const shape of this.shapes) {
+		for(const shape of this.shapes) {
 			if (shape instanceof ConvexPolygon) {
 				for (const localVertex of shape.vertices) {
 					const vertex = localVertex.clone().applyQuaternion(this.quaternion);
 					if (vertex.x < lowerBound.x) lowerBound.x = vertex.x;
 					if (vertex.y < lowerBound.y) lowerBound.y = vertex.y;
 					if (vertex.z < lowerBound.z) lowerBound.z = vertex.z;
-
+	
 					if (vertex.x > upperBound.x) upperBound.x = vertex.x;
 					if (vertex.y > upperBound.y) upperBound.y = vertex.y;
 					if (vertex.z > upperBound.z) upperBound.z = vertex.z;
@@ -137,7 +145,7 @@ export class Body extends EventDispatcher {
 				if (-shape.radius < lowerBound.x) lowerBound.x = -shape.radius;
 				if (-shape.radius < lowerBound.y) lowerBound.y = -shape.radius;
 				if (-shape.radius < lowerBound.z) lowerBound.z = -shape.radius;
-
+	
 				if (shape.radius > upperBound.x) upperBound.x = shape.radius;
 				if (shape.radius > upperBound.y) upperBound.y = shape.radius;
 				if (shape.radius > upperBound.z) upperBound.z = shape.radius;
@@ -150,21 +158,25 @@ export class Body extends EventDispatcher {
 	}
 
 	updateAABB () {
-		for (const shape of this.shapes) {
+		this.shapes.forEach(shape => {
 			this.AABB.extend(shape.AABB);
-		}
+		});
 	}
 
-	updateMass () {
-		this.invMass = this.mass == 0 ? 0 : 1 / this.mass;
+	updateMassProperties () {
+		this.invMass = this.mass === 0 ? 0 : 1 / this.mass;
 		const I = this.inertia;
-		this.invInertia.set(
-			I.x > 0 ? 1.0 / I.x : 0,
-			I.y > 0 ? 1.0 / I.y : 0,
-			I.z > 0 ? 1.0 / I.z : 0
+		for(const shape of this.shapes) {
+			I.add(shape.calculateInertia(this.mass));
+		}
+		const iI = this.invInertia;
+		iI.set(
+			I.x === 0 ? 0 : 1.0 / I.x,
+			I.y === 0 ? 0 : 1.0 / I.y,
+			I.z === 0 ? 0 : 1.0 / I.z
 		);
-		this.inertiaScalar = I.x + I.y + I.z;
-		this.invInertiaScalar = this.inertiaScalar == 0 ? 0 : 1 / this.inertiaScalar;
+		this.inertiaScalar = (I.x + I.y + I.z) / 3;
+		this.invInertiaScalar = (iI.x + iI.y + iI.z) / 3;
 	}
 
 	/**
@@ -205,5 +217,18 @@ export class Body extends EventDispatcher {
 				l
 			);
 		}
+	}
+	/**
+	 * @param {Vector3} impulse
+	 * @param {Vector3} relative
+	 */
+	applyImpulse(impulse, relative) {
+		if(this.mass === 0) return;
+		this.velocity.add(impulse.muled(this.invMass));
+		this.angularVelocity.add(
+			relative
+				.crossed(impulse)
+				.mulScalar(this.invInertiaScalar)
+		);
 	}
 }

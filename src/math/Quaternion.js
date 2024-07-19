@@ -216,15 +216,7 @@ export class Quaternion {
    * @param {Quaternion} target
    * @returns {this}
    */
-	multiply (target) {
-		return this.mulQuaternion(target);
-	}
-
-	/**
-   * @param {Quaternion} target
-   * @returns {this}
-   */
-	mulQuaternion (target) {
+	mul (target) {
 		// from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
 
 		const qax = this.x; const qay = this.y; const qaz = this.z; const qaw = this.w;
@@ -234,6 +226,33 @@ export class Quaternion {
 		this.y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
 		this.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
 		this.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
+		this.normalize();
+
+		return this;
+	}
+
+	/**
+   * @param {Vector3} vec
+   * @param {number} dt
+   * @returns {this}
+   */
+	integrate (vec, dt) {
+		const
+			ax = vec.x,
+			ay = vec.y,
+			az = vec.z,
+			bx = this.x,
+			by = this.y,
+			bz = this.z,
+			bw = this.w;
+
+		const half_dt = dt * 0.5;
+
+		this.x += half_dt * (ax * bw + ay * bz - az * by);
+		this.y += half_dt * (ay * bw + az * bx - ax * bz);
+		this.z += half_dt * (az * bw + ax * by - ay * bx);
+		this.w += half_dt * (- ax * bx - ay * by - az * bz);
+
 		this.normalize();
 
 		return this;

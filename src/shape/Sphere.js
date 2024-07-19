@@ -1,6 +1,6 @@
 import { Vector3 } from '../Cubic.js';
 import { AABB } from '../collision/AABB.js';
-import { Shape, ShapeType } from '../core/Shape.js';
+import { Shape, ShapeType } from './Shape.js';
 
 export class Sphere extends Shape {
 	/**
@@ -9,7 +9,7 @@ export class Sphere extends Shape {
      */
 	constructor (radius = 0) {
 		super({ type: ShapeType.Sphere });
-		this.params = {
+		this.parameters = {
 			radius
 		};
 		this.radius = radius;
